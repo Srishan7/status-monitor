@@ -490,6 +490,21 @@ canvas.block { width:100%; display:block; }
   <div id="iframeLog" style="font-family:monospace;font-size:0.68rem;max-height:180px;overflow-y:auto"></div>
 </div>
 
+<!-- ── INCIDENTS CARD ── -->
+<div class="chart-card" id="incidentsCard" style="display:none">
+  <div class="chart-hdr">
+    <span class="chart-title">Incidents</span>
+    <span id="incidentsMeta" style="font-size:0.59rem;color:var(--muted)"></span>
+    <div style="display:flex;align-items:center;gap:0.3rem;margin-left:auto">
+      <button class="icon-btn" onclick="fetchIncidents()" style="padding:0.2rem 0.5rem;font-size:0.68rem">↻ Now</button>
+      <button class="icon-btn" onclick="downloadIncidents()" style="padding:0.2rem 0.5rem;font-size:0.68rem">⬇ CSV</button>
+    </div>
+  </div>
+  <div id="incidentsOpen" style="margin:0.5rem 0"></div>
+  <div class="sub-label" style="margin-top:0.5rem">Recent resolved</div>
+  <div id="incidentsLog" style="font-family:monospace;font-size:0.68rem;max-height:200px;overflow-y:auto"></div>
+</div>
+
 <!-- ── PING LOGS CARD ── -->
 <div class="chart-card" id="pingLogsCard" style="display:none">
   <div class="chart-hdr">
@@ -1500,6 +1515,63 @@ function renderPingLogs(d) {
   }).join('');
 }
 
+let incidentsCache = [];
+
+async function fetchIncidents() {
+  if (!workerUrl) return;
+  try {
+    const base = workerUrl.replace(/\/$/, '');
+    const r = await fetch(base + '/incidents');
+    if (!r.ok) return;
+    const d = await r.json();
+    renderIncidents(d);
+  } catch {}
+}
+
+function renderIncidents(d) {
+  const card = document.getElementById('incidentsCard');
+  if (!d || (d.open.length === 0 && d.recent.length === 0)) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  incidentsCache = [...(d.open || []), ...(d.recent || [])];
+
+  document.getElementById('incidentsMeta').textContent = `${d.total} total · ${d.open.length} open`;
+
+  // Open incidents — red alert rows
+  const openEl = document.getElementById('incidentsOpen');
+  openEl.innerHTML = d.open.length === 0 ? '' : d.open.map(i => {
+    const host = (() => { try { return new URL(i.url).hostname; } catch { return i.url; } })();
+    const since = new Date(i.started_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const durMs = Date.now() - i.started_at;
+    const dur = durMs < 60000 ? `${Math.round(durMs/1000)}s` : `${Math.round(durMs/60000)}m`;
+    return `<div style="background:rgba(240,80,80,0.12);border:1px solid var(--down);border-radius:6px;padding:0.4rem 0.75rem;margin-bottom:0.4rem;display:flex;gap:1rem;align-items:center">
+      <span style="color:var(--down);font-weight:700;font-size:0.72rem">● DOWN</span>
+      <span style="color:var(--text);font-family:monospace">${host}</span>
+      <span style="color:var(--muted);font-size:0.68rem">since ${since} · ${dur} ago</span>
+      <span style="color:var(--muted);font-size:0.68rem;margin-left:auto">${i.error_msg || ''}</span>
+    </div>`;
+  }).join('');
+
+  // Resolved incidents log
+  const logEl = document.getElementById('incidentsLog');
+  logEl.innerHTML = (d.recent || []).map(i => {
+    const host = (() => { try { return new URL(i.url).hostname; } catch { return i.url; } })();
+    const start = new Date(i.started_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const end   = new Date(i.resolved_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const dur   = i.duration_ms < 60000 ? `${Math.round(i.duration_ms/1000)}s` : `${Math.round(i.duration_ms/60000)}m`;
+    return `<div class="log-row" style="display:flex;gap:0.75rem;padding:0.2rem 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--up);min-width:50px;font-weight:600">RESOLVED</span>
+      <span style="color:var(--muted);min-width:100px">${start} → ${end}</span>
+      <span style="color:var(--warn)">${dur}</span>
+      <span style="color:var(--muted)">${host}</span>
+    </div>`;
+  }).join('');
+}
+
+function downloadIncidents() {
+  if (!incidentsCache.length) return alert('No incidents yet.');
+  downloadCSV('incidents.csv', incidentsCache, ['url','started_at','resolved_at','duration_ms','error_msg']);
+}
+
 let iframeLogsCache = [];
 let pingLogsCache  = [];
 
@@ -1537,6 +1609,8 @@ fetchIframeMetrics();
 setIframeInterval(15000);
 fetchPingLogs();
 setPingLogsInterval(15000);
+fetchIncidents();
+setInterval(fetchIncidents, 30000);
 tick(); restart();
 </script>
 </body>

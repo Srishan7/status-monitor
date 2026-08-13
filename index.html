@@ -14,6 +14,8 @@
   --up:      #23d18b;
   --down:    #f05050;
   --warn:    #f0a830;
+  --error:   #f07040;
+  --info:    #60a5fa;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body {
@@ -58,16 +60,45 @@ body {
   display:flex; align-items:center; gap:0.3rem; white-space:nowrap; flex-shrink:0;
 }
 .icon-btn:hover { border-color:var(--muted); color:var(--text); }
-.icon-btn.on     { border-color:var(--up);   color:var(--up);   }
-.icon-btn.paused { border-color:var(--warn); color:var(--warn); }
-.icon-btn.notify-on { border-color:#a78bfa; color:#a78bfa; }
-.icon-btn.denied { border-color:var(--down); color:var(--down); opacity:.6; cursor:not-allowed; }
+.icon-btn.on       { border-color:var(--up);   color:var(--up);   }
+.icon-btn.paused   { border-color:var(--warn); color:var(--warn); }
+.icon-btn.notify-on{ border-color:#a78bfa;     color:#a78bfa;     }
+.icon-btn.denied   { border-color:var(--down); color:var(--down); opacity:.6; cursor:not-allowed; }
 
-/* ── SESSION INFO BAR ── */
+/* ── WORKER CONFIG ROW ── */
+.worker-row {
+  display:flex; align-items:center; gap:0.5rem;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:7px; padding:0.28rem 0.28rem 0.28rem 0.8rem; margin-bottom:0.6rem;
+}
+.worker-tag {
+  font-size:0.6rem; text-transform:uppercase; letter-spacing:0.08em;
+  color:var(--muted); white-space:nowrap; flex-shrink:0;
+}
+.worker-tag.active { color:#a78bfa; }
+.worker-input {
+  flex:1; background:transparent; border:none; outline:none;
+  color:#a78bfa; font-family:monospace; font-size:0.74rem; min-width:0;
+}
+.worker-input::placeholder { color:var(--muted); }
+.worker-mode {
+  font-size:0.58rem; font-family:monospace;
+  padding:0.12rem 0.45rem; border-radius:3px; white-space:nowrap; flex-shrink:0;
+}
+.worker-mode.image  { background:rgba(74,96,128,0.2);   color:var(--muted); }
+.worker-mode.worker { background:rgba(167,139,250,0.15); color:#a78bfa; }
+.worker-set {
+  background:var(--border); border:none; color:var(--muted);
+  border-radius:5px; padding:0.22rem 0.6rem; cursor:pointer;
+  font-size:0.62rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;
+  flex-shrink:0; transition:color .15s;
+}
+.worker-set:hover { color:var(--text); }
+
+/* ── SESSION BAR ── */
 .session-bar {
   display:flex; align-items:center; justify-content:space-between;
-  font-size:0.63rem; color:var(--muted);
-  margin-bottom:0.85rem; flex-wrap:wrap; gap:0.5rem;
+  font-size:0.63rem; color:var(--muted); margin-bottom:0.85rem; flex-wrap:wrap; gap:0.5rem;
 }
 .session-chip {
   display:inline-flex; align-items:center; gap:0.35rem;
@@ -92,7 +123,6 @@ body {
   padding:0.26rem 0.85rem; border-radius:5px; cursor:pointer;
   font-size:0.65rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
 }
-.add-row button:hover { opacity:.82; }
 
 /* ── STRIP ── */
 .strip { display:flex; gap:0.45rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
@@ -133,11 +163,15 @@ body {
 .mc-left { display:flex; flex-direction:column; gap:0.3rem; }
 .mc-status-row { display:flex; align-items:center; gap:0.55rem; }
 .mc-big-dot { width:11px;height:11px;border-radius:50%;flex-shrink:0; }
-.mc-big-dot.up   { background:var(--up);   animation:ping 1.4s infinite; }
-.mc-big-dot.down { background:var(--down); }
+.mc-big-dot.up    { background:var(--up);    animation:ping 1.4s infinite; }
+.mc-big-dot.warn  { background:var(--warn);  animation:ping-warn 1.4s infinite; }
+.mc-big-dot.error { background:var(--error); animation:ping-err 1.4s infinite; }
+.mc-big-dot.down  { background:var(--down);  }
 .mc-state { font-size:1.45rem; font-weight:800; letter-spacing:-0.02em; }
-.mc-state.up   { color:var(--up);   }
-.mc-state.down { color:var(--down); }
+.mc-state.up    { color:var(--up);    }
+.mc-state.warn  { color:var(--warn);  }
+.mc-state.error { color:var(--error); }
+.mc-state.down  { color:var(--down);  }
 .mc-url   { font-family:monospace; font-size:0.69rem; color:var(--muted); word-break:break-all; }
 .mc-right { text-align:right; flex-shrink:0; }
 .mc-lat-row { display:flex; align-items:baseline; justify-content:flex-end; gap:0.25rem; }
@@ -157,12 +191,13 @@ body {
 .mt-label { font-size:0.56rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:0.25rem; }
 .mt-row   { display:flex; align-items:baseline; gap:0.3rem; }
 .mt-val   { font-size:1.05rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); }
-.mt-val.good { color:var(--up);   }
-.mt-val.warn { color:var(--warn); }
-.mt-val.bad  { color:var(--down); }
+.mt-val.good  { color:var(--up);    }
+.mt-val.warn  { color:var(--warn);  }
+.mt-val.error { color:var(--error); }
+.mt-val.bad   { color:var(--down);  }
 .mt-unit  { font-size:0.6rem; color:var(--muted); }
 
-/* SLA threshold control */
+/* SLA row */
 .sla-row {
   display:flex; align-items:center; gap:0.5rem;
   margin-bottom:0.75rem; font-size:0.68rem; flex-wrap:wrap;
@@ -175,12 +210,11 @@ body {
   transition:border-color .15s;
 }
 .sla-input:focus { border-color:#00c8f0; }
-.sla-unit { color:var(--muted); }
+.sla-unit  { color:var(--muted); }
 .sla-apply {
   background:var(--border); border:none; color:var(--muted);
   border-radius:4px; padding:0.18rem 0.55rem;
   font-size:0.62rem; cursor:pointer; letter-spacing:0.06em; text-transform:uppercase;
-  transition:color .15s;
 }
 .sla-apply:hover { color:var(--text); }
 .sla-hint { font-size:0.6rem; color:var(--muted); margin-left:0.25rem; }
@@ -189,11 +223,10 @@ body {
 .trend-row { display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem; font-size:0.7rem; color:var(--muted); flex-wrap:wrap; }
 .trend-chip { font-size:0.68rem; font-weight:600; padding:0.1rem 0.5rem; border-radius:4px; font-family:monospace; }
 .trend-chip.rising  { background:rgba(240,168,48,0.15); color:var(--warn); }
-.trend-chip.falling { background:rgba(35,209,139,0.15); color:var(--up);   }
-.trend-chip.stable  { background:rgba(74,96,128,0.18);  color:var(--muted);}
+.trend-chip.falling { background:rgba(35,209,139,0.15); color:var(--up);  }
+.trend-chip.stable  { background:rgba(74,96,128,0.18);  color:var(--muted); }
 .trend-sep { color:var(--border); }
 
-/* Sub-chart labels */
 .sub-label {
   font-size:0.56rem; text-transform:uppercase; letter-spacing:0.1em;
   color:var(--muted); margin:0.85rem 0 0.4rem;
@@ -224,27 +257,35 @@ canvas.block { width:100%; display:block; }
   background:var(--border); color:var(--muted); border:none;
   border-radius:4px; padding:0.14rem 0.5rem; cursor:pointer;
 }
-.log-filter-btn:hover { color:var(--text); }
-.log-clear { background:none; border:none; color:var(--muted); font-size:0.59rem; cursor:pointer; text-transform:uppercase; letter-spacing:0.06em; }
-.log-clear:hover { color:var(--text); }
+.log-clear { background:none; border:none; color:var(--muted); font-size:0.59rem; cursor:pointer; text-transform:uppercase; }
 .log-body { height:155px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
 .log-body::-webkit-scrollbar { width:3px; }
 .log-body::-webkit-scrollbar-thumb { background:var(--border); }
 .log-row {
-  display:grid; grid-template-columns:80px 42px 68px 1fr;
+  display:grid; grid-template-columns:80px 56px 64px 1fr;
   padding:0.19rem 1rem 0.19rem 0.8rem;
   font-family:monospace; font-size:0.68rem;
   border-bottom:1px solid rgba(255,255,255,0.025);
   font-variant-numeric:tabular-nums; border-left:3px solid transparent;
+  align-items:center;
 }
-.log-ts { color:var(--muted); }
-.log-st { font-weight:700; }
-.log-st.up { color:var(--up);   }
-.log-st.dn { color:var(--down); }
+.log-ts  { color:var(--muted); }
+.log-st  { font-weight:700; }
+.log-lat { }
 .log-lbl { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 @keyframes ping {
   0%   { box-shadow:0 0 0 0 rgba(35,209,139,0.5); }
+  70%  { box-shadow:0 0 0 7px transparent; }
+  100% { box-shadow:0 0 0 0 transparent; }
+}
+@keyframes ping-warn {
+  0%   { box-shadow:0 0 0 0 rgba(240,168,48,0.5); }
+  70%  { box-shadow:0 0 0 7px transparent; }
+  100% { box-shadow:0 0 0 0 transparent; }
+}
+@keyframes ping-err {
+  0%   { box-shadow:0 0 0 0 rgba(240,112,64,0.5); }
   70%  { box-shadow:0 0 0 7px transparent; }
   100% { box-shadow:0 0 0 0 transparent; }
 }
@@ -273,6 +314,17 @@ canvas.block { width:100%; display:block; }
   <button class="icon-btn" id="pauseBtn"  onclick="togglePause()">⏸ Pause</button>
 </div>
 
+<!-- Worker config -->
+<div class="worker-row">
+  <span class="worker-tag" id="workerTag">🔍 Worker URL</span>
+  <input id="workerInput" class="worker-input" type="text"
+         placeholder="https://your-worker.workers.dev  —  paste URL then click Set to enable real HTTP status codes"
+         onkeydown="if(event.key==='Enter') applyWorkerUrl()">
+  <span class="worker-mode image" id="workerMode">image ping</span>
+  <button class="worker-set" onclick="applyWorkerUrl()">Set</button>
+  <button class="worker-set" onclick="clearWorkerUrl()" style="opacity:.6">✕</button>
+</div>
+
 <div class="session-bar" id="sessionBar"></div>
 
 <div class="add-row">
@@ -292,6 +344,7 @@ canvas.block { width:100%; display:block; }
       <div class="mc-status-row">
         <span class="mc-big-dot up" id="mc-dot"></span>
         <span class="mc-state up"   id="mc-state">—</span>
+        <span id="mc-code" style="font-family:monospace;font-size:0.75rem;color:var(--muted);margin-left:0.25rem"></span>
       </div>
       <span class="mc-url" id="mc-url"></span>
     </div>
@@ -306,7 +359,6 @@ canvas.block { width:100%; display:block; }
 
   <div class="metrics-grid" id="metricsGrid"></div>
 
-  <!-- SLA threshold control -->
   <div class="sla-row">
     <label for="slaInput">SLA target</label>
     <input id="slaInput" class="sla-input" type="number" min="50" max="30000" step="50" value="500"
@@ -340,7 +392,7 @@ canvas.block { width:100%; display:block; }
   <canvas id="compChart" class="block"></canvas>
 </div>
 
-<!-- ── ALL-URLS COMBINED CHART ── -->
+<!-- ── COMBINED CHART ── -->
 <div class="chart-card">
   <div class="chart-hdr">
     <span class="chart-title">All endpoints · last 60 s</span>
@@ -362,8 +414,10 @@ canvas.block { width:100%; display:block; }
 
 <script>
 // ── Config ────────────────────────────────────────────────────
-const PALETTE       = ['#00c8f0','#a78bfa','#fbbf24','#fb7185','#34d399','#f97316','#60a5fa','#e879f9'];
-const STORAGE_KEY   = 'status-monitor-v1';
+const PALETTE     = ['#00c8f0','#a78bfa','#fbbf24','#fb7185','#34d399','#f97316','#60a5fa','#e879f9'];
+const STORAGE_KEY = 'status-monitor-v1';
+const WORKER_KEY  = 'status-monitor-worker-url';
+
 const DEFAULT_MONITORS = [
   { id:'u0', url:'https://marici.org/shine',                            label:'marici.org/shine',          color:'#00c8f0', slaThreshold:500 },
   { id:'u1', url:'https://marici.org',                                  label:'marici.org',                 color:'#a78bfa', slaThreshold:200 },
@@ -384,36 +438,135 @@ let logFilterSelected = false;
 let timerId           = null;
 let sessionStart      = new Date();
 let priorPingsLoaded  = 0;
+let workerUrl         = localStorage.getItem(WORKER_KEY) || '';
 
 function initState(id) {
   state[id] = {
-    hist:           [],
+    hist:           [],   // { ts, up, ok, status, latency, via }
     totalPings:     0,
     totalUp:        0,
     totalIncidents: 0,
     lastDownAt:     null,
     prevUp:         true,
+    lastStatus:     null,
   };
+}
+
+// ── Status helpers ────────────────────────────────────────────
+function resultState(r) {
+  if (!r.up)          return { cls:'down',  label:'DOWN'          };
+  if (r.status >= 500) return { cls:'error', label: r.status + '' };
+  if (r.status >= 400) return { cls:'warn',  label: r.status + '' };
+  return                      { cls:'up',    label:'UP'            };
+}
+
+function statusColor(r) {
+  if (!r || !r.up)          return 'var(--down)';
+  if (r.status >= 500)      return 'var(--error)';
+  if (r.status >= 400)      return 'var(--warn)';
+  return null; // use URL color
+}
+
+function dotColor(m, r) {
+  if (!r || !r.up)          return 'var(--down)';
+  if (r.status >= 500)      return 'var(--error)';
+  if (r.status >= 400)      return 'var(--warn)';
+  return m.color;
+}
+
+// ── Worker URL ────────────────────────────────────────────────
+function applyWorkerUrl() {
+  const val = document.getElementById('workerInput').value.trim();
+  workerUrl = val;
+  if (val) {
+    localStorage.setItem(WORKER_KEY, val);
+  } else {
+    localStorage.removeItem(WORKER_KEY);
+  }
+  updateWorkerUI();
+}
+
+function clearWorkerUrl() {
+  workerUrl = '';
+  document.getElementById('workerInput').value = '';
+  localStorage.removeItem(WORKER_KEY);
+  updateWorkerUI();
+}
+
+function updateWorkerUI() {
+  const tag  = document.getElementById('workerTag');
+  const mode = document.getElementById('workerMode');
+  const inp  = document.getElementById('workerInput');
+  if (workerUrl) {
+    tag.classList.add('active');
+    mode.className = 'worker-mode worker';
+    mode.textContent = 'worker active';
+    inp.value = workerUrl;
+  } else {
+    tag.classList.remove('active');
+    mode.className = 'worker-mode image';
+    mode.textContent = 'image ping';
+  }
+}
+
+// ── Ping functions ────────────────────────────────────────────
+function ping(url) {
+  return workerUrl ? pingViaWorker(url) : pingViaImage(url);
+}
+
+async function pingViaWorker(url) {
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 6500);
+  const t0   = performance.now();
+  try {
+    const resp = await fetch(workerUrl + '?url=' + encodeURIComponent(url), { signal: ctrl.signal });
+    clearTimeout(tid);
+    const data = await resp.json();
+    return {
+      up:      data.status > 0,
+      ok:      !!data.ok,
+      status:  data.status  || 0,
+      latency: data.latency ?? Math.round(performance.now() - t0),
+      via:     'worker',
+    };
+  } catch (_) {
+    clearTimeout(tid);
+    return { up: false, ok: false, status: 0, latency: null, via: 'worker' };
+  }
+}
+
+function pingViaImage(url) {
+  return new Promise(resolve => {
+    const img  = new Image();
+    const t0   = performance.now();
+    let   done = false;
+    const fin  = up => {
+      if (done) return; done = true;
+      clearTimeout(tid);
+      const latency = up ? Math.round(performance.now() - t0) : null;
+      resolve({ up, ok: up, status: up ? 200 : 0, latency, via: 'image' });
+    };
+    const tid = setTimeout(() => fin(false), 5000);
+    img.onload  = () => fin(true);
+    img.onerror = () => fin(true);
+    img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  });
 }
 
 // ── LocalStorage ─────────────────────────────────────────────
 function saveToStorage() {
   try {
-    const data = {
-      monitors,
-      selectedId,
-      intervalMs,
-      state: Object.fromEntries(
-        Object.entries(state).map(([id, s]) => [id, {
-          hist:           s.hist.map(h => ({ ts: h.ts.getTime(), up: h.up, latency: h.latency })),
-          totalPings:     s.totalPings,
-          totalUp:        s.totalUp,
-          totalIncidents: s.totalIncidents,
-          lastDownAt:     s.lastDownAt ? s.lastDownAt.getTime() : null,
-        }])
-      ),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      monitors, selectedId, intervalMs,
+      state: Object.fromEntries(Object.entries(state).map(([id, s]) => [id, {
+        hist:           s.hist.map(h => ({ ts: h.ts.getTime(), up: h.up, ok: h.ok, status: h.status, latency: h.latency, via: h.via })),
+        totalPings:     s.totalPings,
+        totalUp:        s.totalUp,
+        totalIncidents: s.totalIncidents,
+        lastDownAt:     s.lastDownAt ? s.lastDownAt.getTime() : null,
+        lastStatus:     s.lastStatus,
+      }])),
+    }));
   } catch (_) {}
 }
 
@@ -423,22 +576,21 @@ function loadFromStorage() {
     if (!raw) return false;
     const data = JSON.parse(raw);
     if (!data.monitors || !data.monitors.length) return false;
-
-    monitors = data.monitors;
+    monitors   = data.monitors;
     selectedId = data.selectedId || monitors[0].id;
     intervalMs = data.intervalMs || 1000;
-
     monitors.forEach(m => {
       if (!m.slaThreshold) m.slaThreshold = 500;
       const saved = data.state && data.state[m.id];
       if (saved) {
         state[m.id] = {
-          hist:           saved.hist.map(h => ({ ts: new Date(h.ts), up: h.up, latency: h.latency })),
+          hist:           saved.hist.map(h => ({ ts: new Date(h.ts), up: h.up, ok: h.ok ?? h.up, status: h.status ?? (h.up ? 200 : 0), latency: h.latency, via: h.via || 'image' })),
           totalPings:     saved.totalPings,
           totalUp:        saved.totalUp,
           totalIncidents: saved.totalIncidents,
           lastDownAt:     saved.lastDownAt ? new Date(saved.lastDownAt) : null,
           prevUp:         saved.hist.length ? saved.hist[saved.hist.length - 1].up : true,
+          lastStatus:     saved.lastStatus || null,
         };
         priorPingsLoaded += saved.totalPings;
       } else {
@@ -446,45 +598,20 @@ function loadFromStorage() {
       }
     });
     return true;
-  } catch (_) {
-    return false;
-  }
+  } catch (_) { return false; }
 }
 
-function clearStorage() {
-  localStorage.removeItem(STORAGE_KEY);
-  location.reload();
-}
+function clearStorage() { localStorage.removeItem(STORAGE_KEY); location.reload(); }
 
 // ── Session bar ───────────────────────────────────────────────
 function renderSessionBar() {
-  const bar = document.getElementById('sessionBar');
-  const timeStr = sessionStart.toLocaleTimeString();
-  const totalPings = Object.values(state).reduce((a, s) => a + s.totalPings, 0);
-  let html = `<span>Started ${timeStr}</span>`;
+  const total = Object.values(state).reduce((a, s) => a + s.totalPings, 0);
+  let html = `<span>Started ${sessionStart.toLocaleTimeString()}</span>`;
   if (priorPingsLoaded > 0) {
-    html += `<div class="session-chip">📦 Resumed · <span>${priorPingsLoaded.toLocaleString()}</span> pings loaded from last session</div>`;
+    html += `<div class="session-chip">📦 Resumed · <span>${priorPingsLoaded.toLocaleString()}</span> pings from last session</div>`;
   }
-  html += `<span style="margin-left:auto;font-variant-numeric:tabular-nums">${totalPings.toLocaleString()} total pings this session · <button onclick="clearStorage()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.63rem;text-decoration:underline">Reset</button></span>`;
-  bar.innerHTML = html;
-}
-
-// ── Ping ─────────────────────────────────────────────────────
-function ping(url) {
-  return new Promise(resolve => {
-    const img  = new Image();
-    const t0   = performance.now();
-    let   done = false;
-    const fin  = up => {
-      if (done) return; done = true;
-      clearTimeout(tid);
-      resolve({ up, latency: up ? Math.round(performance.now() - t0) : null });
-    };
-    const tid = setTimeout(() => fin(false), 5000);
-    img.onload  = () => fin(true);
-    img.onerror = () => fin(true);
-    img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
-  });
+  html += `<span style="margin-left:auto;font-variant-numeric:tabular-nums">${total.toLocaleString()} pings this session · <button onclick="clearStorage()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.63rem;text-decoration:underline">Reset</button></span>`;
+  document.getElementById('sessionBar').innerHTML = html;
 }
 
 // ── Tick ─────────────────────────────────────────────────────
@@ -501,13 +628,17 @@ async function tick() {
       const ts = new Date();
       const r  = await ping(m.url);
       const s  = state[m.id];
+
       s.totalPings++;
       if (r.up) s.totalUp++;
-      if (!r.up && s.prevUp) {
+      s.lastStatus = r.status;
+
+      const isDown = !r.up;
+      if (isDown && s.prevUp) {
         s.totalIncidents++;
         s.lastDownAt = ts;
-        if (soundOn)    beep();
-        if (notifyEnabled) showNotification(m);
+        if (soundOn)       beep();
+        if (notifyEnabled) showNotification(m, r);
       }
       s.prevUp = r.up;
       s.hist.push({ ts, ...r });
@@ -543,69 +674,77 @@ function computeMetrics(id) {
 
   let trend = null;
   if (lats.length >= 20) {
-    const aLast = lats.slice(-10).reduce((a,b) => a+b, 0) / 10;
-    const aPrev = lats.slice(-20, -10).reduce((a,b) => a+b, 0) / 10;
-    const delta = (aLast - aPrev) / aPrev;
-    trend = delta > 0.12 ? 'rising' : delta < -0.12 ? 'falling' : 'stable';
+    const aL = lats.slice(-10).reduce((a,b) => a+b, 0) / 10;
+    const aP = lats.slice(-20,-10).reduce((a,b) => a+b, 0) / 10;
+    const d  = (aL - aP) / aP;
+    trend = d > 0.12 ? 'rising' : d < -0.12 ? 'falling' : 'stable';
   }
 
   let lastDown = 'never';
   if (s.lastDownAt) {
     const sec = Math.round((Date.now() - s.lastDownAt) / 1000);
-    lastDown = sec < 60 ? sec + 's ago' : sec < 3600 ? Math.round(sec/60) + 'm ago' : Math.round(sec/3600) + 'h ago';
+    lastDown = sec < 60 ? sec+'s ago' : sec < 3600 ? Math.round(sec/60)+'m ago' : Math.round(sec/3600)+'h ago';
   }
 
   return {
     avg, p95, p99, jitter, sla, slaThreshold: thr, uptime, trend,
-    incidents: s.totalIncidents, lastDown,
+    incidents: s.totalIncidents, lastDown, lastStatus: s.lastStatus,
     min: srt[0] ?? null, max: srt[srt.length-1] ?? null,
   };
 }
 
-// ── Main card refresh ─────────────────────────────────────────
+// ── Main card ─────────────────────────────────────────────────
 function refreshMainCard(m) {
   const s    = state[m.id];
   const M    = computeMetrics(m.id);
   const last = s.hist[s.hist.length - 1];
-  const r    = last || { up: true, latency: null };
+  const r    = last || { up: true, ok: true, status: null, latency: null, via: 'image' };
+  const rs   = resultState(r);
 
   document.getElementById('mainCard').style.setProperty('--section-color', m.color);
 
-  const dot = document.getElementById('mc-dot');
-  const st  = document.getElementById('mc-state');
-  dot.className   = 'mc-big-dot ' + (r.up ? 'up' : 'down');
-  st.className    = 'mc-state '   + (r.up ? 'up' : 'down');
-  st.textContent  = r.up ? 'UP' : 'DOWN';
-  document.getElementById('mc-url').textContent = m.url;
+  document.getElementById('mc-dot').className   = 'mc-big-dot ' + rs.cls;
+  document.getElementById('mc-state').className = 'mc-state '   + rs.cls;
+  document.getElementById('mc-state').textContent = rs.label;
+  document.getElementById('mc-url').textContent   = m.url;
+
+  // HTTP code badge (only meaningful in worker mode)
+  const codeEl = document.getElementById('mc-code');
+  if (r.via === 'worker' && r.status > 0 && r.status !== 200) {
+    codeEl.textContent = r.status;
+    codeEl.style.color = statusColor(r) || m.color;
+  } else {
+    codeEl.textContent = '';
+  }
 
   const latEl = document.getElementById('mc-lat');
   latEl.textContent = r.latency ?? '—';
-  latEl.style.color = r.latency == null ? 'var(--down)' : m.color;
+  latEl.style.color = r.latency == null ? 'var(--down)' : (statusColor(r) || m.color);
 
   document.getElementById('mc-pings').textContent =
     s.totalPings.toLocaleString() + ' pings · ' +
     (M.uptime != null ? M.uptime.toFixed(2) + '% up' : '—');
 
-  // SLA input sync
   document.getElementById('slaInput').value = M.slaThreshold;
   const hint = document.getElementById('slaHint');
-  hint.textContent = M.sla != null
-    ? `${M.sla}% of pings ≤${M.slaThreshold}ms`
-    : 'waiting for data…';
-  hint.style.color = M.sla == null ? 'var(--muted)' :
-    M.sla >= 90 ? 'var(--up)' : M.sla >= 70 ? 'var(--warn)' : 'var(--down)';
+  hint.textContent  = M.sla != null ? `${M.sla}% of pings ≤${M.slaThreshold}ms` : 'waiting for data…';
+  hint.style.color  = M.sla == null ? 'var(--muted)' : M.sla >= 90 ? 'var(--up)' : M.sla >= 70 ? 'var(--warn)' : 'var(--down)';
 
   const c3 = (v, hi, lo) => v == null ? '' : v >= hi ? 'good' : v >= lo ? 'warn' : 'bad';
 
+  // Last status tile — shows HTTP code in worker mode, otherwise uptime
+  const lastStatusVal  = M.lastStatus != null ? M.lastStatus : '—';
+  const lastStatusCls  = M.lastStatus == null ? '' : M.lastStatus >= 500 ? 'error' : M.lastStatus >= 400 ? 'warn' : 'good';
+
   document.getElementById('metricsGrid').innerHTML = [
-    { label:'Uptime',            val: M.uptime   != null ? M.uptime.toFixed(2)+'%' : '—',  unit:'',   cls: c3(M.uptime,  99, 95) },
+    { label:'Uptime',            val: M.uptime   != null ? M.uptime.toFixed(2)+'%' : '—',  unit:'',   cls: c3(M.uptime,99,95) },
     { label:'Avg',               val: M.avg      ?? '—',                                    unit:'ms', cls: '' },
     { label:'P95',               val: M.p95      ?? '—',                                    unit:'ms', cls: M.p95    != null && M.p95    > 1500 ? 'warn' : '' },
     { label:'P99',               val: M.p99      ?? '—',                                    unit:'ms', cls: M.p99    != null && M.p99    > 3000 ? 'bad'  : '' },
     { label:'Jitter σ',          val: M.jitter   ?? '—',                                    unit:'ms', cls: M.jitter != null && M.jitter > 200  ? 'warn' : '' },
-    { label:`SLA ≤${M.slaThreshold}ms`, val: M.sla != null ? M.sla+'%' : '—',             unit:'',   cls: c3(M.sla, 90, 70) },
+    { label:`SLA ≤${M.slaThreshold}ms`, val: M.sla != null ? M.sla+'%' : '—',             unit:'',   cls: c3(M.sla,90,70) },
     { label:'Incidents',         val: M.incidents,                                            unit:'',   cls: M.incidents === 0 ? 'good' : M.incidents < 3 ? 'warn' : 'bad' },
-    { label:'Last DOWN',         val: M.lastDown,                                             unit:'',   cls: M.lastDown === 'never' ? 'good' : '' },
+    { label:'Last Status',       val: lastStatusVal,                                          unit:'',   cls: lastStatusCls },
   ].map(t => `<div class="metric-tile">
     <div class="mt-label">${t.label}</div>
     <div class="mt-row"><span class="mt-val ${t.cls}">${t.val}</span>${t.unit ? `<span class="mt-unit">${t.unit}</span>` : ''}</div>
@@ -623,70 +762,14 @@ function refreshMainCard(m) {
   drawHistogram(m, M);
 }
 
-// ── SLA threshold apply ───────────────────────────────────────
 function applySlaThreshold() {
   const val = parseInt(document.getElementById('slaInput').value);
-  if (!val || val < 50 || val > 30000) return;
+  if (!val || val < 50) return;
   const m = monitors.find(x => x.id === selectedId);
-  if (!m) return;
-  m.slaThreshold = val;
-  refreshMainCard(m);
-  saveToStorage();
+  if (m) { m.slaThreshold = val; refreshMainCard(m); saveToStorage(); }
 }
 
-// ── Notifications ─────────────────────────────────────────────
-async function toggleNotify() {
-  const btn = document.getElementById('notifyBtn');
-  if (!('Notification' in window)) {
-    btn.textContent = '🚫 No API';
-    btn.classList.add('denied');
-    return;
-  }
-  if (notifyEnabled) {
-    notifyEnabled = false;
-    updateNotifyBtn();
-    return;
-  }
-  const perm = await Notification.requestPermission();
-  if (perm === 'granted') {
-    notifyEnabled = true;
-    // Test notification
-    new Notification('Status Monitor', { body: 'Notifications enabled ✓', tag: 'test', silent: true });
-  } else {
-    btn.textContent = '🚫 Blocked';
-    btn.classList.add('denied');
-    setTimeout(() => { btn.textContent = '🔔 Notify'; btn.classList.remove('denied'); }, 3000);
-  }
-  updateNotifyBtn();
-}
-
-function updateNotifyBtn() {
-  const btn = document.getElementById('notifyBtn');
-  btn.textContent = notifyEnabled ? '🔔 Notify on' : '🔔 Notify';
-  btn.classList.toggle('notify-on', notifyEnabled);
-}
-
-function showNotification(m) {
-  if (!notifyEnabled || Notification.permission !== 'granted') return;
-  try {
-    new Notification(`🔴 ${m.label} is DOWN`, {
-      body: `No response from ${m.url}`,
-      tag:  m.id,
-      requireInteraction: false,
-    });
-  } catch(_) {}
-}
-
-// ── Check now ─────────────────────────────────────────────────
-function checkNow() {
-  const btn = document.getElementById('checkBtn');
-  btn.textContent = '⟳ …';
-  btn.style.color = '#00c8f0';
-  tick();
-  setTimeout(() => { btn.textContent = '⟳ Now'; btn.style.color = ''; }, 800);
-}
-
-// ── Chart 1: Latency line chart ───────────────────────────────
+// ── Charts ────────────────────────────────────────────────────
 function drawMainChart(m, M) {
   const canvas = document.getElementById('mainChart');
   if (!m || !canvas) return;
@@ -716,7 +799,6 @@ function drawMainChart(m, M) {
     ctx.fillText(Math.round(maxL * (1 - i / 4)), PL - 4, y + 3.5);
   }
 
-  // SLA threshold line
   if (M && M.slaThreshold && M.slaThreshold <= maxL) {
     const sy = toY(M.slaThreshold);
     ctx.save(); ctx.setLineDash([2, 4]);
@@ -727,7 +809,6 @@ function drawMainChart(m, M) {
     ctx.fillText('sla', PL - 4, sy + 3);
   }
 
-  // P95 dashed reference
   if (M && M.p95) {
     const py = toY(M.p95);
     ctx.save(); ctx.setLineDash([4, 4]);
@@ -739,8 +820,13 @@ function drawMainChart(m, M) {
   }
 
   const si = MAX - hist.length;
+
+  // Color segments by status
   hist.forEach((h, i) => {
-    if (!h.up) { ctx.fillStyle = 'rgba(240,80,80,0.13)'; ctx.fillRect(toX(si+i) - 1, PT, 3, cH); }
+    const col = !h.up ? 'rgba(240,80,80,0.18)' :
+                h.status >= 500 ? 'rgba(240,112,64,0.15)' :
+                h.status >= 400 ? 'rgba(240,168,48,0.12)' : null;
+    if (col) { ctx.fillStyle = col; ctx.fillRect(toX(si+i) - 1, PT, 3, cH); }
   });
 
   ctx.beginPath();
@@ -755,272 +841,198 @@ function drawMainChart(m, M) {
   ctx.stroke();
 
   const last = hist[hist.length - 1];
+  const dc = dotColor(m, last);
   ctx.beginPath(); ctx.arc(toX(si+hist.length-1), toY(last.latency??0), 3, 0, Math.PI*2);
-  ctx.fillStyle = m.color; ctx.shadowColor = m.color; ctx.shadowBlur = 8;
+  ctx.fillStyle = dc; ctx.shadowColor = dc; ctx.shadowBlur = 8;
   ctx.fill(); ctx.shadowBlur = 0;
 
   ctx.fillStyle = '#2d4060'; ctx.textAlign = 'center'; ctx.font = '9px monospace';
   [0, 0.25, 0.5, 0.75, 1].forEach(f => {
     const i = Math.round(f * (hist.length - 1));
     if (hist[i]) ctx.fillText(
-      hist[i].ts.toLocaleTimeString('en', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }),
-      toX(si+i), H - 4
+      hist[i].ts.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}),
+      toX(si+i), H-4
     );
   });
 }
 
-// ── Chart 2: Status strip ─────────────────────────────────────
 function drawStatusStrip(m) {
   const canvas = document.getElementById('statusStrip');
   if (!m || !canvas) return;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const W   = canvas.offsetWidth; const H = 14;
+  const W = canvas.offsetWidth; const H = 14;
   canvas.width = W * dpr; canvas.height = H * dpr;
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, W, H);
+  ctx.scale(dpr, dpr); ctx.clearRect(0, 0, W, H);
 
-  const MAX  = 60;
   const hist = state[m.id].hist;
-  const segW = W / MAX;
-  const gap  = 1.2;
-  let upCount = 0, dnCount = 0;
+  const segW = W / 60; const gap = 1.2;
+  let up = 0, dn = 0, warn = 0, err = 0;
 
-  for (let i = 0; i < MAX; i++) {
-    const di = hist.length - (MAX - i);
+  for (let i = 0; i < 60; i++) {
+    const di = hist.length - (60 - i);
     let color;
     if (di < 0) {
       color = 'rgba(28,43,66,0.35)';
     } else {
-      hist[di].up ? upCount++ : dnCount++;
-      color = hist[di].up ? '#23d18b' : '#f05050';
+      const h = hist[di];
+      if      (!h.up)           { color = '#f05050'; dn++;   }
+      else if (h.status >= 500) { color = '#f07040'; err++;  }
+      else if (h.status >= 400) { color = '#f0a830'; warn++; }
+      else                      { color = '#23d18b'; up++;   }
     }
     ctx.fillStyle = color;
     frr(ctx, i * segW + gap / 2, 0, segW - gap, H, 2);
   }
 
   const note = document.getElementById('stripNote');
-  if (note) note.textContent = `${upCount} up · ${dnCount} down in window`;
+  if (note) {
+    let parts = [`${up} ok`];
+    if (warn) parts.push(`${warn} 4xx`);
+    if (err)  parts.push(`${err} 5xx`);
+    if (dn)   parts.push(`${dn} down`);
+    note.textContent = parts.join(' · ');
+  }
 }
 
-// ── Chart 3: Histogram ────────────────────────────────────────
 function drawHistogram(m, M) {
   const canvas = document.getElementById('histChart');
   if (!m || !canvas) return;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const W   = canvas.offsetWidth; const H = 84;
+  const W = canvas.offsetWidth; const H = 84;
   canvas.width = W * dpr; canvas.height = H * dpr;
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, W, H);
+  ctx.scale(dpr, dpr); ctx.clearRect(0, 0, W, H);
 
   const lats = state[m.id].hist.filter(h => h.latency != null).map(h => h.latency);
   if (!lats.length) return;
 
-  const p95v  = (M && M.p95) ? M.p95 : 1000;
-  const bMax  = Math.max(p95v * 1.5, 1000);
-  const step  = bMax / 5;
+  const p95v   = (M && M.p95) ? M.p95 : 1000;
+  const bMax   = Math.max(p95v * 1.5, 1000);
+  const step   = bMax / 5;
   const bounds = [0, step, step*2, step*3, step*4, bMax, Infinity];
-  const fmt   = v => v >= 1000 ? (v/1000).toFixed(1)+'k' : Math.round(v)+'';
-  const labels = bounds.slice(0, -1).map((b, i) =>
-    i === bounds.length - 2 ? fmt(b)+'+' : fmt(b)+'–'+fmt(bounds[i+1])
-  );
+  const fmt    = v => v >= 1000 ? (v/1000).toFixed(1)+'k' : Math.round(v)+'';
+  const labels = bounds.slice(0,-1).map((b,i) => i === bounds.length-2 ? fmt(b)+'+' : fmt(b)+'–'+fmt(bounds[i+1]));
   const counts = Array(labels.length).fill(0);
-  lats.forEach(l => {
-    for (let i = 0; i < bounds.length - 1; i++) {
-      if (l >= bounds[i] && l < bounds[i+1]) { counts[i]++; break; }
-    }
-  });
+  lats.forEach(l => { for (let i=0; i<bounds.length-1; i++) { if (l>=bounds[i]&&l<bounds[i+1]){counts[i]++;break;} } });
 
-  const maxCount = Math.max(...counts, 1);
+  const maxC = Math.max(...counts, 1);
   const PL = 28, PB = 20, PT = 16, PR = 8;
-  const cW = W - PL - PR, cH = H - PT - PB;
-  const barW = cW / labels.length;
-  const gap  = Math.max(3, barW * 0.12);
+  const cW = W-PL-PR, cH = H-PT-PB;
+  const bw = cW/labels.length, gap = Math.max(3, bw*0.12);
 
   counts.forEach((c, i) => {
-    const bH = Math.max((c / maxCount) * cH, c > 0 ? 2 : 0);
-    const x  = PL + i * barW + gap / 2;
-    const y  = PT + cH - bH;
-    const w  = barW - gap;
-
-    const bg = ctx.createLinearGradient(0, y, 0, y + bH);
-    bg.addColorStop(0, hexAlpha(m.color, 0.85));
-    bg.addColorStop(1, hexAlpha(m.color, 0.3));
-    ctx.fillStyle = bg;
-    frr(ctx, x, y, w, bH, 2);
-
-    if (c > 0) {
-      ctx.fillStyle = m.color; ctx.textAlign = 'center';
-      ctx.font = 'bold 9px monospace';
-      ctx.fillText(c, x + w / 2, y - 3);
-    }
-
+    const bH = Math.max((c/maxC)*cH, c>0?2:0);
+    const x = PL+i*bw+gap/2, y = PT+cH-bH, w = bw-gap;
+    const bg = ctx.createLinearGradient(0,y,0,y+bH);
+    bg.addColorStop(0, hexAlpha(m.color,0.85)); bg.addColorStop(1, hexAlpha(m.color,0.3));
+    ctx.fillStyle = bg; frr(ctx,x,y,w,bH,2);
+    if (c>0) { ctx.fillStyle=m.color; ctx.textAlign='center'; ctx.font='bold 9px monospace'; ctx.fillText(c,x+w/2,y-3); }
     if (M) {
-      [{ v: M.p95, lbl: 'p95', col: 'rgba(240,168,48,0.8)' },
-       { v: M.p99, lbl: 'p99', col: 'rgba(240,80,80,0.7)'  }].forEach(({ v, lbl, col }) => {
-        if (v == null || bounds[i+1] === Infinity) return;
-        if (v >= bounds[i] && v < bounds[i+1]) {
-          const px = x + (v - bounds[i]) / (bounds[i+1] - bounds[i]) * w;
-          ctx.strokeStyle = col; ctx.lineWidth = 1.5;
-          ctx.beginPath(); ctx.moveTo(px, PT); ctx.lineTo(px, PT + cH); ctx.stroke();
-          ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.font = '8px monospace';
-          ctx.fillText(lbl, px, PT - 2);
+      [{v:M.p95,lbl:'p95',col:'rgba(240,168,48,0.8)'},{v:M.p99,lbl:'p99',col:'rgba(240,80,80,0.7)'}].forEach(({v,lbl,col})=>{
+        if (v==null||bounds[i+1]===Infinity) return;
+        if (v>=bounds[i]&&v<bounds[i+1]) {
+          const px=x+(v-bounds[i])/(bounds[i+1]-bounds[i])*w;
+          ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(px,PT); ctx.lineTo(px,PT+cH); ctx.stroke();
+          ctx.fillStyle=col; ctx.textAlign='center'; ctx.font='8px monospace'; ctx.fillText(lbl,px,PT-2);
         }
       });
-      // SLA threshold marker
-      if (M.slaThreshold && M.slaThreshold >= bounds[i] && M.slaThreshold < bounds[i+1] && bounds[i+1] !== Infinity) {
-        const sx = x + (M.slaThreshold - bounds[i]) / (bounds[i+1] - bounds[i]) * w;
-        ctx.strokeStyle = 'rgba(35,209,139,0.6)'; ctx.lineWidth = 1.5;
-        ctx.setLineDash([2, 3]);
-        ctx.beginPath(); ctx.moveTo(sx, PT); ctx.lineTo(sx, PT + cH); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(35,209,139,0.6)'; ctx.textAlign = 'center'; ctx.font = '8px monospace';
-        ctx.fillText('sla', sx, PT - 2);
+      if (M.slaThreshold&&M.slaThreshold>=bounds[i]&&M.slaThreshold<bounds[i+1]&&bounds[i+1]!==Infinity) {
+        const sx=x+(M.slaThreshold-bounds[i])/(bounds[i+1]-bounds[i])*w;
+        ctx.save(); ctx.setLineDash([2,3]);
+        ctx.strokeStyle='rgba(35,209,139,0.6)'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(sx,PT); ctx.lineTo(sx,PT+cH); ctx.stroke(); ctx.restore();
+        ctx.fillStyle='rgba(35,209,139,0.6)'; ctx.textAlign='center'; ctx.font='8px monospace'; ctx.fillText('sla',sx,PT-2);
       }
     }
-
-    ctx.fillStyle = '#2d4060'; ctx.textAlign = 'center'; ctx.font = '8px monospace';
-    ctx.fillText(labels[i], x + w / 2, H - 4);
+    ctx.fillStyle='#2d4060'; ctx.textAlign='center'; ctx.font='8px monospace'; ctx.fillText(labels[i],x+w/2,H-4);
   });
-
-  ctx.fillStyle = '#2d4060'; ctx.textAlign = 'right'; ctx.font = '9px monospace';
-  ctx.fillText(maxCount, PL - 3, PT + 4);
-  ctx.fillText(0, PL - 3, PT + cH + 2);
+  ctx.fillStyle='#2d4060'; ctx.textAlign='right'; ctx.font='9px monospace';
+  ctx.fillText(maxC,PL-3,PT+4); ctx.fillText(0,PL-3,PT+cH+2);
 }
 
-// ── Chart 4: Comparison ───────────────────────────────────────
 function drawComparisonChart() {
   const canvas = document.getElementById('compChart');
   if (!canvas || !monitors.length) return;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const W   = canvas.offsetWidth;
-  const ROW = 42;
-  const H   = monitors.length * ROW + 24;
-  canvas.style.height = H + 'px';
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, W, H);
+  const W = canvas.offsetWidth;
+  const ROW = 42, H = monitors.length*ROW+24;
+  canvas.style.height = H+'px'; canvas.width=W*dpr; canvas.height=H*dpr;
+  ctx.scale(dpr,dpr); ctx.clearRect(0,0,W,H);
 
-  const PL = Math.min(140, W * 0.3), PR = 62, PT = 10, PB = 18;
-  const cW = W - PL - PR;
-
-  const allVals = monitors.flatMap(m => {
-    const last = state[m.id].hist[state[m.id].hist.length - 1];
-    const M    = computeMetrics(m.id);
-    return [last ? (last.latency ?? 0) : 0, M.p95 ?? 0];
+  const PL=Math.min(140,W*0.3), PR=70, PT=10, PB=18, cW=W-PL-PR;
+  const allVals = monitors.flatMap(m=>{
+    const last=state[m.id].hist[state[m.id].hist.length-1];
+    const M=computeMetrics(m.id);
+    return [last?(last.latency??0):0, M.p95??0];
   });
-  const maxVal = Math.max(...allVals, 100);
+  const maxVal = Math.max(...allVals,100);
 
-  monitors.forEach((m, i) => {
-    const s    = state[m.id];
-    const M    = computeMetrics(m.id);
-    const last = s.hist[s.hist.length - 1];
-    const cur  = last && last.up && last.latency != null ? last.latency : 0;
-    const isUp = last ? last.up : true;
-    const midY = PT + i * ROW + ROW / 2;
-    const bH   = 20;
-    const y    = midY - bH / 2;
+  monitors.forEach((m,i)=>{
+    const s=state[m.id], M=computeMetrics(m.id);
+    const last=s.hist[s.hist.length-1];
+    const cur=last&&last.up&&last.latency!=null?last.latency:0;
+    const r=last||{up:true,ok:true,status:200};
+    const rs=resultState(r);
+    const midY=PT+i*ROW+ROW/2, bH=20, y=midY-bH/2;
+    const lbl=m.label.length>22?m.label.slice(0,21)+'…':m.label;
 
-    const lbl = m.label.length > 22 ? m.label.slice(0, 21) + '…' : m.label;
-    ctx.fillStyle = '#4a6080'; ctx.textAlign = 'right'; ctx.font = '10px system-ui,sans-serif';
-    ctx.fillText(lbl, PL - 8, midY + 4);
+    ctx.fillStyle='#4a6080'; ctx.textAlign='right'; ctx.font='10px system-ui,sans-serif';
+    ctx.fillText(lbl, PL-8, midY+4);
+    ctx.fillStyle='rgba(28,43,66,0.5)'; frr(ctx,PL,y,cW,bH,3);
 
-    ctx.fillStyle = 'rgba(28,43,66,0.5)';
-    frr(ctx, PL, y, cW, bH, 3);
+    if (M.avg) { ctx.fillStyle=hexAlpha(m.color,0.18); frr(ctx,PL,y,Math.min((M.avg/maxVal)*cW,cW),bH,3); }
 
-    if (M.avg) {
-      frr.call(null, ctx, PL, y, Math.min((M.avg / maxVal) * cW, cW), bH, 3);
-      ctx.fillStyle = hexAlpha(m.color, 0.18);
-      frr(ctx, PL, y, Math.min((M.avg / maxVal) * cW, cW), bH, 3);
+    const bww=rs.cls==='down'?0:Math.max(Math.min((cur/maxVal)*cW,cW),cur>0?4:0);
+    if (bww>0) {
+      const barColor = rs.cls==='up' ? m.color : rs.cls==='warn' ? 'var(--warn)' : 'var(--error)';
+      const bg=ctx.createLinearGradient(PL,0,PL+bww,0);
+      bg.addColorStop(0,hexAlpha(m.color,0.4)); bg.addColorStop(1,barColor);
+      ctx.fillStyle=bg; frr(ctx,PL,y,bww,bH,3);
     }
+    if (M.avg){const ax=PL+Math.min((M.avg/maxVal)*cW,cW);ctx.save();ctx.setLineDash([3,3]);ctx.strokeStyle=hexAlpha(m.color,0.5);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(ax,y);ctx.lineTo(ax,y+bH);ctx.stroke();ctx.restore();}
+    if (M.p95){const px=PL+Math.min((M.p95/maxVal)*cW,cW);ctx.fillStyle='rgba(240,168,48,0.85)';frr(ctx,px-1,y,2,bH,1);}
 
-    const bw = isUp ? Math.max(Math.min((cur / maxVal) * cW, cW), cur > 0 ? 4 : 0) : cW;
-    if (bw > 0) {
-      const bg = ctx.createLinearGradient(PL, 0, PL + bw, 0);
-      bg.addColorStop(0, hexAlpha(m.color, 0.4));
-      bg.addColorStop(1, isUp ? m.color : '#f05050');
-      ctx.fillStyle = bg;
-      frr(ctx, PL, y, bw, bH, 3);
-    }
-
-    if (M.avg) {
-      const ax = PL + Math.min((M.avg / maxVal) * cW, cW);
-      ctx.save(); ctx.setLineDash([3, 3]);
-      ctx.strokeStyle = hexAlpha(m.color, 0.5); ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(ax, y); ctx.lineTo(ax, y + bH); ctx.stroke();
-      ctx.restore();
-    }
-
-    if (M.p95) {
-      const px = PL + Math.min((M.p95 / maxVal) * cW, cW);
-      ctx.fillStyle = 'rgba(240,168,48,0.85)';
-      frr(ctx, px - 1, y, 2, bH, 1);
-    }
-
-    ctx.textAlign = 'left';
-    ctx.fillStyle = isUp ? m.color : '#f05050';
-    ctx.font = 'bold 10px monospace';
-    ctx.fillText(isUp ? (cur > 0 ? cur + 'ms' : '—') : 'DOWN', PL + cW + 6, midY + 1);
-    if (M.avg != null) {
-      ctx.fillStyle = '#2d4060'; ctx.font = '9px monospace';
-      ctx.fillText('avg ' + M.avg, PL + cW + 6, midY + 13);
-    }
+    ctx.textAlign='left';
+    ctx.fillStyle = rs.cls==='up'?m.color:rs.cls==='warn'?'var(--warn)':rs.cls==='error'?'var(--error)':'var(--down)';
+    ctx.font='bold 10px monospace';
+    const rightLabel = rs.cls==='down'?'DOWN':rs.cls==='up'?(cur>0?cur+'ms':'—'):`${rs.label} ${cur>0?cur+'ms':''}`;
+    ctx.fillText(rightLabel, PL+cW+6, midY+1);
+    if (M.avg!=null){ctx.fillStyle='#2d4060';ctx.font='9px monospace';ctx.fillText('avg '+M.avg,PL+cW+6,midY+13);}
   });
 
-  const legY = H - PB + 6;
-  ctx.fillStyle = '#2d4060'; ctx.textAlign = 'left'; ctx.font = '8px monospace';
-  ctx.save(); ctx.setLineDash([3, 3]);
-  ctx.strokeStyle = 'rgba(100,140,170,0.5)'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(PL, legY); ctx.lineTo(PL + 18, legY); ctx.stroke();
-  ctx.restore();
-  ctx.fillText('avg', PL + 22, legY + 3);
-  ctx.fillStyle = 'rgba(240,168,48,0.8)';
-  frr(ctx, PL + 42, legY - 3, 2, 7, 1);
-  ctx.fillStyle = '#2d4060'; ctx.fillText('p95', PL + 47, legY + 3);
+  const legY=H-PB+6;
+  ctx.fillStyle='#2d4060'; ctx.textAlign='left'; ctx.font='8px monospace';
+  ctx.save();ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(100,140,170,0.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(PL,legY);ctx.lineTo(PL+18,legY);ctx.stroke();ctx.restore();
+  ctx.fillText('avg',PL+22,legY+3);
+  ctx.fillStyle='rgba(240,168,48,0.8)';frr(ctx,PL+42,legY-3,2,7,1);
+  ctx.fillStyle='#2d4060';ctx.fillText('p95',PL+47,legY+3);
 }
 
-// ── Chart 5: Combined line chart ──────────────────────────────
 function drawBigChart() {
   const canvas = document.getElementById('bigChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const W   = canvas.offsetWidth; const H = 90;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, W, H);
-
-  const PL = 44, PB = 6, PT = 6, PR = 8;
-  const cW = W - PL - PR, cH = H - PT - PB;
-  const MAX = 60;
-  const allLats = monitors.flatMap(m => state[m.id].hist.map(h => h.latency ?? 0));
-  const maxL    = Math.max(...allLats, 80);
-
-  for (let i = 0; i <= 3; i++) {
-    const y = PT + cH * (i / 3);
-    ctx.strokeStyle = 'rgba(28,43,66,0.8)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(PL, y); ctx.lineTo(W - PR, y); ctx.stroke();
-    ctx.fillStyle = '#2d4060'; ctx.textAlign = 'right'; ctx.font = '9px monospace';
-    ctx.fillText(Math.round(maxL * (1 - i / 3)), PL - 4, y + 3.5);
-  }
-
-  const toX = i => PL + (i / (MAX - 1)) * cW;
-  const toY = l => PT + (1 - l / maxL) * cH;
-
-  monitors.forEach(m => {
-    const hist = state[m.id].hist;
-    if (hist.length < 2) return;
-    const si = MAX - hist.length;
-    ctx.beginPath(); ctx.strokeStyle = m.color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.88;
-    hist.forEach((h, i) => { const x=toX(si+i), y=toY(h.latency??0); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-    ctx.stroke(); ctx.globalAlpha = 1;
-    const last = hist[hist.length - 1];
-    ctx.beginPath(); ctx.arc(toX(si+hist.length-1), toY(last.latency??0), 2, 0, Math.PI*2);
-    ctx.fillStyle = m.color; ctx.shadowColor = m.color; ctx.shadowBlur = 5;
-    ctx.fill(); ctx.shadowBlur = 0;
+  const W = canvas.offsetWidth; const H = 90;
+  canvas.width=W*dpr; canvas.height=H*dpr; ctx.scale(dpr,dpr); ctx.clearRect(0,0,W,H);
+  const PL=44,PB=6,PT=6,PR=8,cW=W-PL-PR,cH=H-PT-PB,MAX=60;
+  const allLats=monitors.flatMap(m=>state[m.id].hist.map(h=>h.latency??0));
+  const maxL=Math.max(...allLats,80);
+  for(let i=0;i<=3;i++){const y=PT+cH*(i/3);ctx.strokeStyle='rgba(28,43,66,0.8)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PL,y);ctx.lineTo(W-PR,y);ctx.stroke();ctx.fillStyle='#2d4060';ctx.textAlign='right';ctx.font='9px monospace';ctx.fillText(Math.round(maxL*(1-i/3)),PL-4,y+3.5);}
+  const toX=i=>PL+(i/(MAX-1))*cW, toY=l=>PT+(1-l/maxL)*cH;
+  monitors.forEach(m=>{
+    const hist=state[m.id].hist; if(hist.length<2)return;
+    const si=MAX-hist.length;
+    ctx.beginPath();ctx.strokeStyle=m.color;ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.globalAlpha=0.88;
+    hist.forEach((h,i)=>{const x=toX(si+i),y=toY(h.latency??0);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();ctx.globalAlpha=1;
+    const last=hist[hist.length-1];
+    const dc=dotColor(m,last);
+    ctx.beginPath();ctx.arc(toX(si+hist.length-1),toY(last.latency??0),2,0,Math.PI*2);
+    ctx.fillStyle=dc;ctx.shadowColor=dc;ctx.shadowBlur=5;ctx.fill();ctx.shadowBlur=0;
   });
 }
 
@@ -1031,12 +1043,11 @@ function buildStrip() {
   monitors.forEach(m => {
     const pill = document.createElement('div');
     pill.className = 'strip-pill' + (m.id === selectedId ? ' active' : '');
-    pill.id = 'spill-' + m.id;
-    pill.onclick = () => switchTo(m.id);
+    pill.id = 'spill-' + m.id; pill.onclick = () => switchTo(m.id);
     pill.innerHTML =
       `<span class="strip-dot" id="sdot-${m.id}" style="background:${m.color}"></span>` +
       `<span class="strip-name">${m.label}</span>` +
-      `<span class="strip-lat"  id="slat-${m.id}">—</span>` +
+      `<span class="strip-lat" id="slat-${m.id}">—</span>` +
       `<button class="strip-remove" onclick="removeMonitor(event,'${m.id}')">✕</button>`;
     el.appendChild(pill);
   });
@@ -1046,172 +1057,140 @@ function updateStripPill(m, r) {
   const dot = document.getElementById('sdot-' + m.id);
   const lat = document.getElementById('slat-' + m.id);
   if (!dot) return;
-  dot.style.background = r.up ? m.color : 'var(--down)';
-  lat.textContent = r.up && r.latency != null ? r.latency + 'ms' : r.up ? '—' : 'DOWN';
-  lat.style.color = r.up ? '' : 'var(--down)';
+  dot.style.background = dotColor(m, r);
+  if (!r.up) { lat.textContent = 'DOWN'; lat.style.color = 'var(--down)'; }
+  else if (r.status >= 500) { lat.textContent = r.status; lat.style.color = 'var(--error)'; }
+  else if (r.status >= 400) { lat.textContent = r.status; lat.style.color = 'var(--warn)'; }
+  else { lat.textContent = r.latency != null ? r.latency+'ms' : '—'; lat.style.color = ''; }
 }
-
-// ── Select / switch ───────────────────────────────────────────
-function rebuildSelect() {
-  document.getElementById('urlSelect').innerHTML = monitors.map(m =>
-    `<option value="${m.id}"${m.id === selectedId ? ' selected' : ''}>${m.label}</option>`
-  ).join('');
-}
-
-function rebuildLegend() {
-  document.getElementById('legend').innerHTML = monitors.map(m =>
-    `<div class="legend-item"><span class="legend-dot" style="background:${m.color}"></span>${m.label}</div>`
-  ).join('');
-}
-
-function switchTo(id) {
-  selectedId = id;
-  rebuildSelect(); buildStrip(); rebuildLegend();
-  const m = monitors.find(x => x.id === id);
-  if (m) refreshMainCard(m);
-}
-
-function onSelectChange() { switchTo(document.getElementById('urlSelect').value); }
-
-// ── Add / Remove ──────────────────────────────────────────────
-function addUrl() {
-  const inp = document.getElementById('addInput');
-  let url = inp.value.trim();
-  if (!url) return;
-  if (!url.startsWith('http')) url = 'https://' + url;
-  const label = url.replace(/^https?:\/\//,'').replace(/\/$/,'');
-  const color = PALETTE[paletteIdx % PALETTE.length]; paletteIdx++;
-  const id = 'u' + Date.now();
-  monitors.push({ id, url, label, color, slaThreshold: 500 });
-  initState(id);
-  rebuildSelect(); buildStrip(); rebuildLegend();
-  inp.value = '';
-  saveToStorage();
-}
-
-function removeMonitor(e, id) {
-  e.stopPropagation();
-  monitors = monitors.filter(m => m.id !== id);
-  delete state[id];
-  if (selectedId === id && monitors.length) selectedId = monitors[0].id;
-  rebuildSelect(); buildStrip(); rebuildLegend();
-  const m = monitors.find(x => x.id === selectedId);
-  if (m) refreshMainCard(m);
-  saveToStorage();
-}
-
-// ── Controls ──────────────────────────────────────────────────
-function setIntervalSec(sec) {
-  intervalMs = sec * 1000;
-  document.querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.sec === String(sec)));
-  restart();
-  saveToStorage();
-}
-function toggleSound() {
-  soundOn = !soundOn;
-  const btn = document.getElementById('soundBtn');
-  btn.textContent = soundOn ? '🔔 Sound on' : '🔕 Sound';
-  btn.classList.toggle('on', soundOn);
-}
-function togglePause() {
-  paused = !paused;
-  const btn = document.getElementById('pauseBtn');
-  btn.textContent = paused ? '▶ Resume' : '⏸ Pause';
-  btn.classList.toggle('paused', paused);
-  if (paused) { clearInterval(timerId); timerId = null; } else restart();
-}
-function toggleLogFilter() {
-  logFilterSelected = !logFilterSelected;
-  document.getElementById('logFilterBtn').textContent = logFilterSelected ? 'Selected URL' : 'All URLs';
-}
-function clearLog() { document.getElementById('logBody').innerHTML = ''; }
 
 // ── Log ──────────────────────────────────────────────────────
 function appendLog(m, r, ts) {
   if (logFilterSelected && m.id !== selectedId) return;
   const body = document.getElementById('logBody');
   const row  = document.createElement('div');
-  row.className = 'log-row';
-  row.style.borderLeftColor = m.color;
-  const latTxt   = r.latency != null ? r.latency + 'ms' : 'timeout';
+  row.className = 'log-row'; row.style.borderLeftColor = m.color;
+  const rs       = resultState(r);
+  const stColor  = rs.cls==='up'?'var(--up)':rs.cls==='warn'?'var(--warn)':rs.cls==='error'?'var(--error)':'var(--down)';
+  const latTxt   = r.latency != null ? r.latency+'ms' : 'timeout';
   const latColor = r.latency == null ? 'var(--down)' : r.latency > 800 ? 'var(--warn)' : m.color;
   row.innerHTML =
     `<span class="log-ts">${ts.toLocaleTimeString()}</span>` +
-    `<span class="log-st ${r.up?'up':'dn'}">${r.up?'UP':'DOWN'}</span>` +
+    `<span class="log-st" style="color:${stColor}">${rs.label}</span>` +
     `<span style="font-family:monospace;color:${latColor}">${latTxt}</span>` +
     `<span class="log-lbl">${m.label}</span>`;
   body.prepend(row);
   while (body.children.length > 500) body.removeChild(body.lastChild);
 }
 
-// ── Sound ─────────────────────────────────────────────────────
-function beep() {
-  try {
-    const ac = new (window.AudioContext || window.webkitAudioContext)();
-    const o  = ac.createOscillator(), g = ac.createGain();
-    o.connect(g); g.connect(ac.destination);
-    o.frequency.value = 440; o.type = 'sine';
-    g.gain.setValueAtTime(0.3, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.4);
-    o.start(); o.stop(ac.currentTime + 0.4);
-  } catch(_) {}
+// ── Notifications ─────────────────────────────────────────────
+async function toggleNotify() {
+  const btn = document.getElementById('notifyBtn');
+  if (!('Notification' in window)) { btn.textContent='🚫 No API'; return; }
+  if (notifyEnabled) { notifyEnabled=false; updateNotifyBtn(); return; }
+  const perm = await Notification.requestPermission();
+  if (perm==='granted') { notifyEnabled=true; new Notification('Status Monitor',{body:'Notifications enabled ✓',tag:'test',silent:true}); }
+  else { btn.textContent='🚫 Blocked'; btn.classList.add('denied'); setTimeout(()=>{btn.textContent='🔔 Notify';btn.classList.remove('denied');},3000); }
+  updateNotifyBtn();
 }
+function updateNotifyBtn() {
+  const btn=document.getElementById('notifyBtn');
+  btn.textContent=notifyEnabled?'🔔 Notify on':'🔔 Notify';
+  btn.classList.toggle('notify-on',notifyEnabled);
+}
+function showNotification(m, r) {
+  if (!notifyEnabled||Notification.permission!=='granted') return;
+  const rs=resultState(r);
+  try { new Notification(`${rs.cls==='down'?'🔴':'🟡'} ${m.label} — ${rs.label}`,{body:r.status?`HTTP ${r.status} from ${m.url}`:`No response from ${m.url}`,tag:m.id}); } catch(_){}
+}
+
+// ── Controls ──────────────────────────────────────────────────
+function setIntervalSec(sec) {
+  intervalMs=sec*1000;
+  document.querySelectorAll('.pill').forEach(b=>b.classList.toggle('active',b.dataset.sec===String(sec)));
+  restart(); saveToStorage();
+}
+function toggleSound() {
+  soundOn=!soundOn;
+  const btn=document.getElementById('soundBtn');
+  btn.textContent=soundOn?'🔔 Sound on':'🔕 Sound';
+  btn.classList.toggle('on',soundOn);
+}
+function togglePause() {
+  paused=!paused;
+  const btn=document.getElementById('pauseBtn');
+  btn.textContent=paused?'▶ Resume':'⏸ Pause';
+  btn.classList.toggle('paused',paused);
+  if(paused){clearInterval(timerId);timerId=null;}else restart();
+}
+function checkNow() {
+  const btn=document.getElementById('checkBtn');
+  btn.textContent='⟳ …'; btn.style.color='#00c8f0';
+  tick(); setTimeout(()=>{btn.textContent='⟳ Now';btn.style.color='';},800);
+}
+function toggleLogFilter() {
+  logFilterSelected=!logFilterSelected;
+  document.getElementById('logFilterBtn').textContent=logFilterSelected?'Selected URL':'All URLs';
+}
+function clearLog() { document.getElementById('logBody').innerHTML=''; }
+
+function addUrl() {
+  const inp=document.getElementById('addInput');
+  let url=inp.value.trim(); if(!url)return;
+  if(!url.startsWith('http'))url='https://'+url;
+  const label=url.replace(/^https?:\/\//,'').replace(/\/$/,'');
+  const color=PALETTE[paletteIdx%PALETTE.length]; paletteIdx++;
+  const id='u'+Date.now();
+  monitors.push({id,url,label,color,slaThreshold:500});
+  initState(id); rebuildSelect(); buildStrip(); rebuildLegend();
+  inp.value=''; saveToStorage();
+}
+function removeMonitor(e,id) {
+  e.stopPropagation();
+  monitors=monitors.filter(m=>m.id!==id); delete state[id];
+  if(selectedId===id&&monitors.length)selectedId=monitors[0].id;
+  rebuildSelect();buildStrip();rebuildLegend();
+  const m=monitors.find(x=>x.id===selectedId); if(m)refreshMainCard(m);
+  saveToStorage();
+}
+
+function rebuildSelect() {
+  document.getElementById('urlSelect').innerHTML=monitors.map(m=>`<option value="${m.id}"${m.id===selectedId?' selected':''}>${m.label}</option>`).join('');
+}
+function rebuildLegend() {
+  document.getElementById('legend').innerHTML=monitors.map(m=>`<div class="legend-item"><span class="legend-dot" style="background:${m.color}"></span>${m.label}</div>`).join('');
+}
+function switchTo(id) {
+  selectedId=id; rebuildSelect();buildStrip();rebuildLegend();
+  const m=monitors.find(x=>x.id===id); if(m)refreshMainCard(m);
+}
+function onSelectChange(){switchTo(document.getElementById('urlSelect').value);}
+
+// ── Sound ─────────────────────────────────────────────────────
+function beep(){try{const ac=new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=440;o.type='sine';g.gain.setValueAtTime(0.3,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.4);o.start();o.stop(ac.currentTime+0.4);}catch(_){}}
 
 // ── Helpers ───────────────────────────────────────────────────
-function hexAlpha(hex, a) {
-  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
-}
+function hexAlpha(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${a})`;}
+function frr(ctx,x,y,w,h,r){if(w<=0||h<=0)return;r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();ctx.fill();}
 
-function frr(ctx, x, y, w, h, r) {
-  if (w <= 0 || h <= 0) return;
-  r = Math.min(r, w/2, h/2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y,     x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x,     y + h, r);
-  ctx.arcTo(x,     y + h, x,     y,     r);
-  ctx.arcTo(x,     y,     x + w, y,     r);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function restart() {
-  clearInterval(timerId);
-  timerId = setInterval(tick, intervalMs);
-}
-
-window.addEventListener('beforeunload', saveToStorage);
-window.addEventListener('resize', () => {
-  const m = monitors.find(x => x.id === selectedId);
-  if (m) {
-    const M = computeMetrics(m.id);
-    drawMainChart(m, M);
-    drawStatusStrip(m);
-    drawHistogram(m, M);
-  }
-  drawComparisonChart();
-  drawBigChart();
+function restart(){clearInterval(timerId);timerId=setInterval(tick,intervalMs);}
+window.addEventListener('beforeunload',saveToStorage);
+window.addEventListener('resize',()=>{
+  const m=monitors.find(x=>x.id===selectedId);
+  if(m){const M=computeMetrics(m.id);drawMainChart(m,M);drawStatusStrip(m);drawHistogram(m,M);}
+  drawComparisonChart();drawBigChart();
 });
 
 // ── Init ──────────────────────────────────────────────────────
 const restored = loadFromStorage();
 if (!restored) {
-  monitors = DEFAULT_MONITORS.map(m => ({ ...m }));
+  monitors = DEFAULT_MONITORS.map(m => ({...m}));
   monitors.forEach(m => initState(m.id));
 }
-
-// Sync interval pill
-document.querySelectorAll('.pill').forEach(b => {
-  b.classList.toggle('active', parseInt(b.dataset.sec) * 1000 === intervalMs);
-});
-
-rebuildSelect();
-buildStrip();
-rebuildLegend();
-renderSessionBar();
-tick();
-restart();
+document.querySelectorAll('.pill').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.sec)*1000===intervalMs));
+updateWorkerUI();
+rebuildSelect(); buildStrip(); rebuildLegend(); renderSessionBar();
+tick(); restart();
 </script>
 </body>
 </html>

@@ -465,6 +465,17 @@ canvas.block { width:100%; display:block; }
   <canvas id="histChart" class="block" height="84"></canvas>
 </div>
 
+<!-- ── IFRAME METRICS CARD ── -->
+<div class="chart-card" id="iframeMetricsCard" style="display:none">
+  <div class="chart-hdr">
+    <span class="chart-title">📋 Donate Form · Real Load Times</span>
+    <span class="sub-note" id="iframeMetaNote" style="font-size:0.59rem;color:var(--muted)"></span>
+  </div>
+  <div class="metrics-grid" id="iframeStatsGrid" style="margin:0.75rem 0"></div>
+  <div class="sub-label" style="margin-top:0.5rem">Recent donor sessions</div>
+  <div id="iframeLog" style="font-family:monospace;font-size:0.68rem;max-height:180px;overflow-y:auto"></div>
+</div>
+
 <!-- ── COMPARISON CARD ── -->
 <div class="chart-card">
   <div class="chart-hdr">
@@ -1266,6 +1277,50 @@ function setIntervalSec(sec) {
   document.querySelectorAll('.pill').forEach(b=>b.classList.toggle('active',b.dataset.sec===String(sec)));
   restart(); saveToStorage();
 }
+async function fetchIframeMetrics() {
+  if (!workerUrl) return;
+  try {
+    const base = workerUrl.replace(/\/$/, '');
+    const r = await fetch(base + '/iframe-metrics');
+    if (!r.ok) return;
+    const d = await r.json();
+    renderIframeMetrics(d);
+  } catch {}
+}
+
+function renderIframeMetrics(d) {
+  const card = document.getElementById('iframeMetricsCard');
+  if (!d || d.count === 0) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  document.getElementById('iframeMetaNote').textContent = `${d.count} real donor session${d.count !== 1 ? 's' : ''} recorded`;
+
+  const fmt = v => v != null ? v + ' ms' : '—';
+  const cls = v => v == null ? '' : v < 2000 ? 'good' : v < 5000 ? 'warn' : 'bad';
+  document.getElementById('iframeStatsGrid').innerHTML = [
+    { l: 'Avg Load',  v: fmt(d.avg),  c: cls(d.avg)  },
+    { l: 'Fastest',   v: fmt(d.min),  c: 'good'      },
+    { l: 'Slowest',   v: fmt(d.max),  c: cls(d.max)  },
+    { l: 'P95',       v: fmt(d.p95),  c: cls(d.p95)  },
+  ].map(t => `<div class="metric-tile">
+    <div class="mt-label">${t.l}</div>
+    <div class="mt-row"><span class="mt-val ${t.c}">${t.v}</span></div>
+  </div>`).join('');
+
+  const log = document.getElementById('iframeLog');
+  log.innerHTML = (d.entries || []).slice(0, 50).map(e => {
+    const dt = new Date(e.timestamp);
+    const hm = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dur = e.duration;
+    const col = dur < 2000 ? 'var(--up)' : dur < 5000 ? 'var(--warn)' : 'var(--down)';
+    return `<div class="log-row" style="display:flex;gap:0.75rem;padding:0.25rem 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--muted);flex-shrink:0">${hm}</span>
+      <span style="color:${col};font-weight:700;flex-shrink:0">${Math.round(dur)}ms</span>
+      <span style="color:var(--muted)">${e.iframe || e.page}</span>
+    </div>`;
+  }).join('');
+}
+
 function toggleTheme() {
   const light = document.documentElement.classList.toggle('light');
   const btn = document.getElementById('themeBtn');
@@ -1362,6 +1417,8 @@ document.querySelectorAll('.pill').forEach(b=>b.classList.toggle('active',parseI
 updateWorkerUI();
 buildStrip(); rebuildLegend(); renderSummaryWidget(); renderSessionBar();
 switchTo('all');
+fetchIframeMetrics();
+setInterval(fetchIframeMetrics, 60000);
 tick(); restart();
 </script>
 </body>

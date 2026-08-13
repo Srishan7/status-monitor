@@ -376,13 +376,9 @@ canvas.block { width:100%; display:block; }
   </div>
   <button class="icon-btn" id="backBtn" onclick="switchTo('all')" style="display:none">← All</button>
   <div class="pills">
-    <button class="pill"        data-sec="1"  onclick="setIntervalSec(1)">1s</button>
-    <button class="pill"        data-sec="2"  onclick="setIntervalSec(2)">2s</button>
-    <button class="pill"        data-sec="5"  onclick="setIntervalSec(5)">5s</button>
-    <button class="pill"        data-sec="10" onclick="setIntervalSec(10)">10s</button>
-    <button class="pill"        data-sec="15" onclick="setIntervalSec(15)">15s</button>
-    <button class="pill"        data-sec="30" onclick="setIntervalSec(30)">30s</button>
-    <button class="pill active" data-sec="60" onclick="setIntervalSec(60)">1min</button>
+    <button class="pill"        data-sec="300"  onclick="setIntervalSec(300)">5min</button>
+    <button class="pill"        data-sec="600"  onclick="setIntervalSec(600)">10min</button>
+    <button class="pill active" data-sec="3600" onclick="setIntervalSec(3600)">1hr</button>
   </div>
   <button class="icon-btn" id="themeBtn"  onclick="toggleTheme()">☀️ Light</button>
   <button class="icon-btn" id="soundBtn"  onclick="toggleSound()">🔕 Sound</button>
@@ -572,7 +568,7 @@ let monitors = [];
 const state  = {};
 
 let selectedId        = 'all';
-let intervalMs        = 60000;
+let intervalMs        = 3600000;
 let paused            = false;
 let soundOn           = false;
 let notifyEnabled     = false;
@@ -720,7 +716,7 @@ function loadFromStorage() {
     if (!data.monitors || !data.monitors.length) return false;
     monitors   = data.monitors;
     selectedId = data.selectedId || monitors[0].id;
-    intervalMs = data.intervalMs || 1000;
+    intervalMs = data.intervalMs || 3600000;
     monitors.forEach(m => {
       if (!m.slaThreshold) m.slaThreshold = 500;
       const saved = data.state && data.state[m.id];

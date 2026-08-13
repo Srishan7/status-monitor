@@ -470,10 +470,37 @@ canvas.block { width:100%; display:block; }
   <div class="chart-hdr">
     <span class="chart-title">📋 Donate Form · Real Load Times</span>
     <span class="sub-note" id="iframeMetaNote" style="font-size:0.59rem;color:var(--muted)"></span>
+    <div style="display:flex;align-items:center;gap:0.3rem;margin-left:auto">
+      <span style="font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Refresh</span>
+      <button class="pill iframe-pill active" data-ims="15000"  onclick="setIframeInterval(15000)">15s</button>
+      <button class="pill iframe-pill"        data-ims="30000"  onclick="setIframeInterval(30000)">30s</button>
+      <button class="pill iframe-pill"        data-ims="60000"  onclick="setIframeInterval(60000)">1m</button>
+      <button class="pill iframe-pill"        data-ims="300000" onclick="setIframeInterval(300000)">5m</button>
+      <button class="icon-btn" onclick="fetchIframeMetrics()" title="Refresh now" style="padding:0.2rem 0.5rem;font-size:0.68rem">↻</button>
+    </div>
   </div>
   <div class="metrics-grid" id="iframeStatsGrid" style="margin:0.75rem 0"></div>
   <div class="sub-label" style="margin-top:0.5rem">Recent donor sessions</div>
   <div id="iframeLog" style="font-family:monospace;font-size:0.68rem;max-height:180px;overflow-y:auto"></div>
+</div>
+
+<!-- ── PING LOGS CARD ── -->
+<div class="chart-card" id="pingLogsCard" style="display:none">
+  <div class="chart-hdr">
+    <span class="chart-title">Ping History · All URLs</span>
+    <span class="sub-note" id="pingLogsMeta" style="font-size:0.59rem;color:var(--muted)"></span>
+    <div style="display:flex;align-items:center;gap:0.3rem;margin-left:auto">
+      <span style="font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Refresh</span>
+      <button class="pill pl-pill active" data-plms="15000"  onclick="setPingLogsInterval(15000)">15s</button>
+      <button class="pill pl-pill"        data-plms="30000"  onclick="setPingLogsInterval(30000)">30s</button>
+      <button class="pill pl-pill"        data-plms="60000"  onclick="setPingLogsInterval(60000)">1m</button>
+      <button class="pill pl-pill"        data-plms="300000" onclick="setPingLogsInterval(300000)">5m</button>
+      <button class="icon-btn" onclick="fetchPingLogs()" title="Refresh now" style="padding:0.2rem 0.5rem;font-size:0.68rem">↻</button>
+    </div>
+  </div>
+  <div id="pingStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.5rem;margin:0.75rem 0"></div>
+  <div class="sub-label" style="margin-top:0.5rem">Recent pings</div>
+  <div id="pingLog" style="font-family:monospace;font-size:0.68rem;max-height:200px;overflow-y:auto"></div>
 </div>
 
 <!-- ── COMPARISON CARD ── -->
@@ -1417,8 +1444,70 @@ document.querySelectorAll('.pill').forEach(b=>b.classList.toggle('active',parseI
 updateWorkerUI();
 buildStrip(); rebuildLegend(); renderSummaryWidget(); renderSessionBar();
 switchTo('all');
+async function fetchPingLogs() {
+  if (!workerUrl) return;
+  try {
+    const base = workerUrl.replace(/\/$/, '');
+    const r = await fetch(base + '/ping-logs');
+    if (!r.ok) return;
+    const d = await r.json();
+    renderPingLogs(d);
+  } catch {}
+}
+
+function renderPingLogs(d) {
+  const card = document.getElementById('pingLogsCard');
+  if (!d || d.total === 0) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  document.getElementById('pingLogsMeta').textContent = `${d.total.toLocaleString()} pings stored`;
+
+  // Per-URL stat tiles
+  const grid = document.getElementById('pingStatsGrid');
+  grid.innerHTML = (d.stats || []).map(s => {
+    const host = (() => { try { return new URL(s.url).hostname; } catch { return s.url; } })();
+    const uptimeColor = s.uptime >= 99 ? 'var(--up)' : s.uptime >= 95 ? 'var(--warn)' : 'var(--down)';
+    return `<div class="metric-tile">
+      <div class="metric-label">${host}</div>
+      <div class="metric-value" style="color:${uptimeColor}">${s.uptime ?? '—'}%</div>
+      <div class="metric-sub">uptime · ${s.count} pings</div>
+      <div class="metric-sub">avg ${s.avg ?? '—'}ms · p95 ${s.p95 ?? '—'}ms</div>
+    </div>`;
+  }).join('');
+
+  // Recent ping log
+  const log = document.getElementById('pingLog');
+  log.innerHTML = (d.recent || []).map(e => {
+    const t = new Date(e.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const host = (() => { try { return new URL(e.url).hostname; } catch { return e.url; } })();
+    const latStr = e.latency !== null ? `${e.latency}ms` : 'timeout';
+    const color = e.ok ? 'var(--up)' : 'var(--down)';
+    return `<div class="log-row" style="display:flex;gap:0.75rem;padding:0.2rem 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--muted);min-width:70px">${t}</span>
+      <span style="color:${color};min-width:40px;font-weight:600">${e.ok ? 'UP' : 'DOWN'}</span>
+      <span style="color:var(--info);min-width:50px">${latStr}</span>
+      <span style="color:var(--muted)">${host}</span>
+    </div>`;
+  }).join('');
+}
+
+let pingLogsIntervalId = null;
+function setPingLogsInterval(ms) {
+  document.querySelectorAll('.pl-pill').forEach(b => b.classList.toggle('active', +b.dataset.plms === ms));
+  if (pingLogsIntervalId) clearInterval(pingLogsIntervalId);
+  pingLogsIntervalId = setInterval(fetchPingLogs, ms);
+}
+
+let iframeIntervalId = null;
+function setIframeInterval(ms) {
+  document.querySelectorAll('.iframe-pill').forEach(b => b.classList.toggle('active', +b.dataset.ims === ms));
+  if (iframeIntervalId) clearInterval(iframeIntervalId);
+  iframeIntervalId = setInterval(fetchIframeMetrics, ms);
+}
 fetchIframeMetrics();
-setInterval(fetchIframeMetrics, 60000);
+setIframeInterval(15000);
+fetchPingLogs();
+setPingLogsInterval(15000);
 tick(); restart();
 </script>
 </body>

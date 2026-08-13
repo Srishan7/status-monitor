@@ -243,6 +243,38 @@ body {
 .trend-chip.stable  { background:rgba(74,96,128,0.18);  color:var(--muted); }
 .trend-sep { color:var(--border); }
 
+/* ── SUMMARY WIDGET ── */
+.summary-widget {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:0.6rem; margin-bottom:0.85rem;
+}
+.sw-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:10px; padding:0.75rem 1rem;
+  display:flex; flex-direction:column; gap:0.3rem;
+  border-left:4px solid var(--sw-color,var(--border));
+  cursor:pointer; transition:box-shadow .15s;
+}
+.sw-card:hover { box-shadow:0 0 0 1px var(--sw-color,var(--border)); }
+.sw-top { display:flex; align-items:center; justify-content:space-between; }
+.sw-dot { width:9px;height:9px;border-radius:50%;flex-shrink:0; }
+.sw-dot.up    { background:var(--up);    animation:ping 1.4s infinite; }
+.sw-dot.warn  { background:var(--warn);  animation:ping-warn 1.4s infinite; }
+.sw-dot.error { background:var(--error); animation:ping-err 1.4s infinite; }
+.sw-dot.down  { background:var(--down); }
+.sw-dot.idle  { background:var(--muted); }
+.sw-state { font-size:0.65rem; font-weight:700; font-family:monospace; }
+.sw-state.up    { color:var(--up);    }
+.sw-state.warn  { color:var(--warn);  }
+.sw-state.error { color:var(--error); }
+.sw-state.down  { color:var(--down);  }
+.sw-state.idle  { color:var(--muted); }
+.sw-label { font-size:0.68rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
+.sw-meta  { display:flex; align-items:baseline; gap:0.3rem; }
+.sw-lat   { font-size:1.1rem; font-weight:800; font-variant-numeric:tabular-nums; line-height:1; }
+.sw-unit  { font-size:0.6rem; color:var(--muted); }
+.sw-uptime{ font-size:0.6rem; color:var(--muted); margin-left:auto; }
+
 .sub-label {
   font-size:0.56rem; text-transform:uppercase; letter-spacing:0.1em;
   color:var(--muted); margin:0.85rem 0 0.4rem;
@@ -343,6 +375,8 @@ canvas.block { width:100%; display:block; }
   <button class="worker-set" onclick="applyWorkerUrl()">Set</button>
   <button class="worker-set" onclick="clearWorkerUrl()" style="opacity:.6">✕</button>
 </div>
+
+<div class="summary-widget" id="summaryWidget"></div>
 
 <div class="session-bar" id="sessionBar"></div>
 
@@ -623,6 +657,30 @@ function loadFromStorage() {
 function clearStorage() { localStorage.removeItem(STORAGE_KEY); location.reload(); }
 
 // ── Session bar ───────────────────────────────────────────────
+function renderSummaryWidget() {
+  const el = document.getElementById('summaryWidget');
+  if (!el) return;
+  el.innerHTML = monitors.map(m => {
+    const s    = state[m.id];
+    const last = s.hist[s.hist.length - 1];
+    const rs   = last ? resultState(last) : { cls:'idle', label:'—' };
+    const lat  = last && last.latency != null ? last.latency : null;
+    const upPct= s.totalPings ? (s.totalUp / s.totalPings * 100).toFixed(1) : null;
+    return `<div class="sw-card" style="--sw-color:${m.color}" onclick="switchTo('${m.id}')">
+      <div class="sw-top">
+        <span class="sw-dot ${rs.cls}"></span>
+        <span class="sw-state ${rs.cls}">${rs.label}</span>
+      </div>
+      <div class="sw-label" title="${m.url}">${m.label}</div>
+      <div class="sw-meta">
+        <span class="sw-lat" style="color:${last && last.up ? m.color : 'var(--down)'}">${lat ?? '—'}</span>
+        ${lat != null ? '<span class="sw-unit">ms</span>' : ''}
+        ${upPct != null ? `<span class="sw-uptime">${upPct}% up</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function renderSessionBar() {
   const total = Object.values(state).reduce((a, s) => a + s.totalPings, 0);
   let html = `<span>Started ${sessionStart.toLocaleTimeString()}</span>`;
@@ -668,6 +726,7 @@ async function tick() {
       appendLog(m, r, ts);
       drawBigChart();
       drawComparisonChart();
+      renderSummaryWidget();
       renderSessionBar();
       scheduleSave();
     }, i * 130);
@@ -1218,7 +1277,7 @@ if (!restored) {
 }
 document.querySelectorAll('.pill').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.sec)*1000===intervalMs));
 updateWorkerUI();
-rebuildSelect(); buildStrip(); rebuildLegend(); renderSessionBar();
+rebuildSelect(); buildStrip(); rebuildLegend(); renderSummaryWidget(); renderSessionBar();
 tick(); restart();
 </script>
 </body>

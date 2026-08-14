@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Latency — Marici</title>
+<style>
+:root {
+  --bg:      #080d18;
+  --surface: #0f1624;
+  --border:  #1c2b42;
+  --text:    #dde4f0;
+  --muted:   #4a6080;
+  --up:      #23d18b;
+  --warn:    #f0a830;
+  --down:    #f05050;
+  --accent:  #00c8f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px; min-height: 100vh; padding: 1.25rem 1.5rem;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1rem; flex-wrap: wrap;
+}
+.brand { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
+.subtitle { font-size: 0.68rem; color: var(--muted); margin-left: 0.25rem; }
+.spacer { flex: 1; }
+.run-btn {
+  background: var(--accent); color: #080d18; border: none; border-radius: 6px;
+  padding: 0.35rem 1rem; font-weight: 700; font-size: 0.75rem; cursor: pointer;
+  transition: opacity .15s;
+}
+.run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.icon-btn {
+  background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+  border-radius: 5px; padding: 0.28rem 0.65rem; font-size: 0.72rem; cursor: pointer;
+}
+.icon-btn:hover { border-color: var(--muted); color: var(--text); }
+.status-line { font-size: 0.65rem; color: var(--muted); }
+
+/* ── TOKEN ROW ── */
+.token-row {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 7px; padding: 0.3rem 0.3rem 0.3rem 0.8rem; margin-bottom: 0.75rem;
+}
+.token-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); white-space: nowrap; }
+.token-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #a78bfa; font-family: monospace; font-size: 0.74rem; min-width: 0;
+}
+.token-input::placeholder { color: var(--muted); }
+.token-set {
+  background: #1c2b42; border: 1px solid var(--border); color: var(--text);
+  border-radius: 4px; padding: 0.22rem 0.6rem; font-size: 0.65rem;
+  cursor: pointer; white-space: nowrap;
+}
+.token-set:hover { border-color: var(--accent); }
+
+/* ── GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+@media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+.card-title {
+  font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.6rem;
+}
+.card-url { font-family: monospace; font-size: 0.72rem; color: var(--accent); }
+
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+th {
+  font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--muted); padding: 0.3rem 0.5rem; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 0.28rem 0.5rem; border-bottom: 1px solid rgba(28,43,66,0.5); }
+tr:last-child td { border-bottom: none; }
+
+.loc-cell { display: flex; align-items: center; gap: 0.4rem; }
+.flag { font-size: 0.9rem; }
+.loc-name { font-size: 0.72rem; color: var(--text); }
+.loc-city { font-size: 0.62rem; color: var(--muted); }
+
+.lat { font-family: monospace; font-weight: 700; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.lat.good { color: var(--up); }
+.lat.warn { color: var(--warn); }
+.lat.bad  { color: var(--down); }
+.lat.slow { color: #a78bfa; }
+.lat.pending { color: var(--muted); font-style: italic; font-weight: 400; font-size: 0.68rem; }
+
+.loss { font-size: 0.65rem; color: var(--muted); }
+.loss.has-loss { color: var(--down); }
+
+/* ── LEGEND ── */
+.legend {
+  display: flex; gap: 1rem; margin-top: 0.75rem;
+  font-size: 0.62rem; color: var(--muted); flex-wrap: wrap;
+}
+.legend span { display: flex; align-items: center; gap: 0.3rem; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">🌍 Global Latency</span>
+  <span class="subtitle">marici.org/shine &amp; Qgiv · 15 locations worldwide</span>
+  <span class="spacer"></span>
+  <span class="status-line" id="statusLine">Enter token and click Run.</span>
+  <button class="run-btn" id="runBtn" onclick="runPings()">▶ Run Global Ping</button>
+  <a href="status-monitor.html" class="icon-btn" style="text-decoration:none">← Monitor</a>
+</div>
+
+<div class="token-row">
+  <span class="token-label">Globalping Token</span>
+  <input class="token-input" id="tokenInput" type="password" placeholder="Paste your token here…" />
+  <button class="token-set" onclick="saveToken()">SET</button>
+  <button class="token-set" onclick="clearToken()" style="color:var(--down)">✕</button>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-title">Target 1</div>
+    <div class="card-url">marici.org/shine</div>
+    <table>
+      <thead><tr><th>Location</th><th>Latency</th><th>Loss</th></tr></thead>
+      <tbody id="mariciBody"></tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-title">Target 2</div>
+    <div class="card-url">secure.qgiv.com</div>
+    <table>
+      <thead><tr><th>Location</th><th>Latency</th><th>Loss</th></tr></thead>
+      <tbody id="qgivBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--up)"></span> &lt;100ms excellent</span>
+  <span><span class="dot" style="background:var(--warn)"></span> 100–300ms good</span>
+  <span><span class="dot" style="background:var(--down)"></span> 300–600ms slow</span>
+  <span><span class="dot" style="background:#a78bfa"></span> &gt;600ms very slow</span>
+</div>
+
+<script>
+const API = 'https://api.globalping.io/v1/measurements';
+const TOKEN_KEY = 'gp_token';
+
+const LOCATIONS = [
+  { magic: 'US', flag: '🇺🇸', name: 'United States',    limit: 3 },
+  { magic: 'CA', flag: '🇨🇦', name: 'Canada',            limit: 1 },
+  { magic: 'BR', flag: '🇧🇷', name: 'Brazil',            limit: 1 },
+  { magic: 'GB', flag: '🇬🇧', name: 'United Kingdom',    limit: 1 },
+  { magic: 'DE', flag: '🇩🇪', name: 'Germany',           limit: 1 },
+  { magic: 'FR', flag: '🇫🇷', name: 'France',            limit: 1 },
+  { magic: 'NL', flag: '🇳🇱', name: 'Netherlands',       limit: 1 },
+  { magic: 'IN', flag: '🇮🇳', name: 'India',             limit: 1 },
+  { magic: 'AE', flag: '🇦🇪', name: 'UAE',               limit: 1 },
+  { magic: 'SG', flag: '🇸🇬', name: 'Singapore',         limit: 1 },
+  { magic: 'JP', flag: '🇯🇵', name: 'Japan',             limit: 1 },
+  { magic: 'KR', flag: '🇰🇷', name: 'South Korea',       limit: 1 },
+  { magic: 'AU', flag: '🇦🇺', name: 'Australia',         limit: 1 },
+  { magic: 'ZA', flag: '🇿🇦', name: 'South Africa',      limit: 1 },
+];
+
+function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+function saveToken() {
+  const v = document.getElementById('tokenInput').value.trim();
+  if (!v) return;
+  localStorage.setItem(TOKEN_KEY, v);
+  document.getElementById('tokenInput').value = '••••••••••••••••';
+  setStatus('Token saved.');
+}
+function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+  document.getElementById('tokenInput').value = '';
+  setStatus('Token cleared.');
+}
+function setStatus(msg) { document.getElementById('statusLine').textContent = msg; }
+
+function latClass(ms) {
+  if (ms === null || ms === undefined) return 'pending';
+  if (ms < 100) return 'lat good';
+  if (ms < 300) return 'lat warn';
+  if (ms < 600) return 'lat bad';
+  return 'lat slow';
+}
+
+const COUNTRY_FLAGS = {
+  US:'🇺🇸',CA:'🇨🇦',GB:'🇬🇧',DE:'🇩🇪',FR:'🇫🇷',NL:'🇳🇱',
+  SG:'🇸🇬',JP:'🇯🇵',AU:'🇦🇺',IN:'🇮🇳',BR:'🇧🇷',ZA:'🇿🇦',
+  KR:'🇰🇷',AE:'🇦🇪',SE:'🇸🇪',PL:'🇵🇱',IT:'🇮🇹',ES:'🇪🇸',
+  FI:'🇫🇮',CH:'🇨🇭',AT:'🇦🇹',MX:'🇲🇽',AR:'🇦🇷',CL:'🇨🇱',
+  HK:'🇭🇰',TW:'🇹🇼',MY:'🇲🇾',TH:'🇹🇭',ID:'🇮🇩',PH:'🇵🇭',
+};
+
+function renderProbes(bodyId, probes) {
+  const tbody = document.getElementById(bodyId);
+  if (!probes || probes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);font-style:italic;padding:0.5rem">Waiting for results…</td></tr>';
+    return;
+  }
+  const sorted = [...probes].sort((a, b) => (a.avg ?? 9999) - (b.avg ?? 9999));
+  tbody.innerHTML = sorted.map(p => {
+    const flag = COUNTRY_FLAGS[p.country] || '🌐';
+    const latStr = p.avg !== null ? `${p.avg}ms` : '—';
+    const cls = latClass(p.avg);
+    const loss = p.loss > 0 ? `${p.loss}%` : '0%';
+    const lossCls = p.loss > 0 ? 'loss has-loss' : 'loss';
+    return `<tr>
+      <td>
+        <div class="loc-cell">
+          <span class="flag">${flag}</span>
+          <div>
+            <div class="loc-name">${p.city || p.country}</div>
+            <div class="loc-city">${p.network || ''}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="${cls}">${latStr}</span></td>
+      <td><span class="${lossCls}">${loss}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+async function createMeasurement(target, token) {
+  const resp = await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({
+      type: 'ping',
+      target,
+      locations: LOCATIONS.map(l => ({ magic: l.magic, limit: l.limit })),
+      measurementOptions: { packets: 3 },
+    }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${resp.status}`);
+  }
+  return (await resp.json()).id;
+}
+
+async function pollMeasurement(id, token, bodyId) {
+  for (let i = 0; i < 40; i++) {
+    await new Promise(r => setTimeout(r, 1000));
+    const resp = await fetch(`${API}/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await resp.json();
+    const probes = (data.results || []).map(r => ({
+      city:    r.probe?.city    || '',
+      country: r.probe?.country || '',
+      network: r.probe?.network || '',
+      avg:     r.result?.stats?.avg  != null ? Math.round(r.result.stats.avg)  : null,
+      loss:    r.result?.stats?.loss != null ? r.result.stats.loss : 0,
+    }));
+    renderProbes(bodyId, probes);
+    if (data.status === 'finished') return probes;
+  }
+  return [];
+}
+
+async function runPings() {
+  const token = getToken();
+  if (!token) { setStatus('⚠ Set your Globalping token first.'); return; }
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+
+  renderProbes('mariciBody', []);
+  renderProbes('qgivBody', []);
+  setStatus('Firing pings from 15 locations… (~10s)');
+
+  try {
+    const [mariciId, qgivId] = await Promise.all([
+      createMeasurement('marici.org', token),
+      createMeasurement('secure.qgiv.com', token),
+    ]);
+    setStatus(`Polling results…`);
+    await Promise.all([
+      pollMeasurement(mariciId, token, 'mariciBody'),
+      pollMeasurement(qgivId,   token, 'qgivBody'),
+    ]);
+    setStatus(`Last run: ${new Date().toLocaleTimeString()} — results from ${LOCATIONS.length} regions`);
+  } catch (e) {
+    setStatus(`Error: ${e.message}`);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '↻ Run Again';
+}
+
+// Init
+const saved = getToken();
+if (saved) {
+  document.getElementById('tokenInput').value = '••••••••••••••••';
+  setStatus('Token loaded. Click Run Global Ping.');
+}
+</script>
+</body>
+</html>

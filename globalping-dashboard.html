@@ -159,8 +159,10 @@ tr:last-child td { border-bottom: none; }
 .lat.slow { color: var(--purple); }
 .lat.pending { color: var(--muted); font-style: italic; font-weight: 400; font-size: 0.68rem; }
 
-.loss { font-size: 0.65rem; color: var(--muted); }
-.loss.has-loss { color: var(--down); }
+.http-status { font-size: 0.68rem; font-family: monospace; color: var(--muted); }
+.http-status.s2 { color: var(--up); }
+.http-status.s3 { color: var(--warn); }
+.http-status.s4, .http-status.s5 { color: var(--down); }
 
 /* ── LEGEND ── */
 .legend {
@@ -195,7 +197,7 @@ tr:last-child td { border-bottom: none; }
     <div class="card-title">Target 1</div>
     <div class="card-url">marici.org/shine</div>
     <table>
-      <thead><tr><th>Location</th><th>Latency</th><th>Loss</th></tr></thead>
+      <thead><tr><th>Location</th><th>Total</th><th>Status</th></tr></thead>
       <tbody id="mariciBody"></tbody>
     </table>
   </div>
@@ -203,7 +205,7 @@ tr:last-child td { border-bottom: none; }
     <div class="card-title">Target 2</div>
     <div class="card-url">secure.qgiv.com</div>
     <table>
-      <thead><tr><th>Location</th><th>Latency</th><th>Loss</th></tr></thead>
+      <thead><tr><th>Location</th><th>Total</th><th>Status</th></tr></thead>
       <tbody id="qgivBody"></tbody>
     </table>
   </div>
@@ -268,19 +270,26 @@ const COUNTRY_FLAGS = {
   HK:'🇭🇰',TW:'🇹🇼',MY:'🇲🇾',TH:'🇹🇭',ID:'🇮🇩',PH:'🇵🇭',
 };
 
+function statusClass(code) {
+  if (!code) return 'http-status';
+  const s = Math.floor(code / 100);
+  return `http-status s${s}`;
+}
+
 function renderProbes(bodyId, probes) {
   const tbody = document.getElementById(bodyId);
   if (!probes || probes.length === 0) {
     tbody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);font-style:italic;padding:0.5rem">Waiting for results…</td></tr>';
     return;
   }
-  const sorted = [...probes].sort((a, b) => (a.avg ?? 9999) - (b.avg ?? 9999));
+  const sorted = [...probes].sort((a, b) => (a.total ?? 9999) - (b.total ?? 9999));
   tbody.innerHTML = sorted.map(p => {
     const flag = COUNTRY_FLAGS[p.country] || '🌐';
-    const latStr = p.avg !== null ? `${p.avg}ms` : '—';
-    const cls = latClass(p.avg);
-    const loss = p.loss > 0 ? `${p.loss}%` : '0%';
-    const lossCls = p.loss > 0 ? 'loss has-loss' : 'loss';
+    const latStr = p.total !== null ? `${p.total}ms` : '—';
+    const cls = latClass(p.total);
+    const statusStr = p.statusCode ? `${p.statusCode}` : '—';
+    const sCls = statusClass(p.statusCode);
+    const tip = p.resolvedAddress ? ` title="${p.resolvedAddress}"` : '';
     return `<tr>
       <td>
         <div class="loc-cell">
@@ -291,21 +300,23 @@ function renderProbes(bodyId, probes) {
           </div>
         </div>
       </td>
-      <td><span class="${cls}">${latStr}</span></td>
-      <td><span class="${lossCls}">${loss}</span></td>
+      <td><span class="${cls}"${tip}>${latStr}</span></td>
+      <td><span class="${sCls}">${statusStr}</span></td>
     </tr>`;
   }).join('');
 }
 
-async function createMeasurement(target, token) {
+async function createMeasurement(host, path, token) {
   const resp = await fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify({
-      type: 'ping',
-      target,
+      type: 'http',
+      target: host,
       locations: LOCATIONS.map(l => ({ magic: l.magic, limit: l.limit })),
-      measurementOptions: { packets: 3 },
+      measurementOptions: {
+        request: { method: 'HEAD', path, protocol: 'HTTPS' },
+      },
     }),
   });
   if (!resp.ok) {
@@ -323,11 +334,12 @@ async function pollMeasurement(id, token, bodyId) {
     });
     const data = await resp.json();
     const probes = (data.results || []).map(r => ({
-      city:    r.probe?.city    || '',
-      country: r.probe?.country || '',
-      network: r.probe?.network || '',
-      avg:     r.result?.stats?.avg  != null ? Math.round(r.result.stats.avg)  : null,
-      loss:    r.result?.stats?.loss != null ? r.result.stats.loss : 0,
+      city:            r.probe?.city    || '',
+      country:         r.probe?.country || '',
+      network:         r.probe?.network || '',
+      total:           r.result?.timings?.total != null ? Math.round(r.result.timings.total) : null,
+      statusCode:      r.result?.status  ?? null,
+      resolvedAddress: r.result?.resolvedAddress || '',
     }));
     renderProbes(bodyId, probes);
     if (data.status === 'finished') return probes;
@@ -345,14 +357,14 @@ async function runPings() {
 
   renderProbes('mariciBody', []);
   renderProbes('qgivBody', []);
-  setStatus('Firing pings from 15 locations… (~10s)');
+  setStatus('Firing HTTP checks from 15 locations… (~15s)');
 
   try {
     const [mariciId, qgivId] = await Promise.all([
-      createMeasurement('marici.org', token),
-      createMeasurement('secure.qgiv.com', token),
+      createMeasurement('marici.org', '/shine', token),
+      createMeasurement('secure.qgiv.com', '/for/businessmasteryaug2026/', token),
     ]);
-    setStatus(`Polling results…`);
+    setStatus('Polling results…');
     await Promise.all([
       pollMeasurement(mariciId, token, 'mariciBody'),
       pollMeasurement(qgivId,   token, 'qgivBody'),

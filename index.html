@@ -407,6 +407,19 @@ html.light .gp-loc-chip.selected { background:rgba(0,112,160,0.1); }
 #gpSection th { font-size:0.58rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); padding:0.3rem 0.5rem; text-align:left; border-bottom:1px solid var(--border); }
 #gpSection td { padding:0.28rem 0.5rem; border-bottom:1px solid var(--row-border); }
 #gpSection tr:last-child td { border-bottom:none; }
+/* ── Browser Check ── */
+#browserSection { margin-top:0.5rem; }
+.bc-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-top:0.75rem; }
+@media(max-width:600px){ .bc-grid { grid-template-columns:1fr; } }
+.bc-card { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:0.75rem; }
+.bc-label { font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:0.2rem; }
+.bc-url { font-family:monospace; font-size:0.68rem; color:var(--accent); margin-bottom:0.6rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bc-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:0.4rem; margin-bottom:0.6rem; }
+.bc-metric { background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.4rem 0.5rem; text-align:center; }
+.bc-metric-val { font-family:monospace; font-size:1rem; font-weight:700; font-variant-numeric:tabular-nums; }
+.bc-metric-lbl { font-size:0.55rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin-top:0.1rem; }
+.bc-run { font-size:0.7rem; padding:0.3rem 0.7rem; }
+.bc-ts { font-size:0.6rem; color:var(--muted); margin-top:0.4rem; }
 .gp-loc-cell { display:flex; align-items:center; gap:0.4rem; }
 .gp-loc-name { font-size:0.72rem; color:var(--text); }
 .gp-loc-city { font-size:0.62rem; color:var(--muted); }
@@ -446,6 +459,7 @@ html.light .gp-loc-chip.selected { background:rgba(0,112,160,0.1); }
   <button class="icon-btn" id="checkBtn"  onclick="checkNow()">⟳ Now</button>
   <button class="icon-btn" id="pauseBtn"  onclick="togglePause()">⏸ Pause</button>
   <button class="icon-btn" onclick="document.getElementById('gpSection').scrollIntoView({behavior:'smooth'})">🌍 Global</button>
+  <button class="icon-btn" onclick="document.getElementById('browserSection').scrollIntoView({behavior:'smooth'})">🖥 Browser</button>
 </div>
 
 <!-- Worker config -->
@@ -674,6 +688,39 @@ html.light .gp-loc-chip.selected { background:rgba(0,112,160,0.1); }
     <span><span class="gp-dot" style="background:var(--warn)"></span> 100–300ms good</span>
     <span><span class="gp-dot" style="background:var(--down)"></span> 300–600ms slow</span>
     <span><span class="gp-dot" style="background:var(--purple)"></span> &gt;600ms very slow</span>
+  </div>
+</div>
+
+<div class="chart-card" id="browserSection" style="margin-top:0.5rem">
+  <div class="chart-hdr">
+    <div>
+      <span class="chart-title">🖥 Browser Load Check</span>
+      <div style="font-size:0.6rem;color:var(--muted);margin-top:0.15rem">Real render timing via headless Chrome — ~20s per check</div>
+    </div>
+  </div>
+  <div class="bc-grid">
+    <div class="bc-card">
+      <div class="bc-label">Qgiv — Donation Form</div>
+      <div class="bc-url">secure.qgiv.com/for/businessmasteryaug2026/</div>
+      <div class="bc-metrics" id="bcMetrics0">
+        <div class="bc-metric"><div class="bc-metric-val" id="bcTtfb0">—</div><div class="bc-metric-lbl">TTFB</div></div>
+        <div class="bc-metric"><div class="bc-metric-val" id="bcDcl0">—</div><div class="bc-metric-lbl">DOM Ready</div></div>
+        <div class="bc-metric"><div class="bc-metric-val" id="bcLoad0">—</div><div class="bc-metric-lbl">Full Load</div></div>
+      </div>
+      <button class="icon-btn bc-run" id="bcBtn0" onclick="bcRun(0)">▶ Run Check</button>
+      <div class="bc-ts" id="bcTs0"></div>
+    </div>
+    <div class="bc-card">
+      <div class="bc-label">Givebutter — Shine Campaign</div>
+      <div class="bc-url">givebutter.com/marici-shine</div>
+      <div class="bc-metrics" id="bcMetrics1">
+        <div class="bc-metric"><div class="bc-metric-val" id="bcTtfb1">—</div><div class="bc-metric-lbl">TTFB</div></div>
+        <div class="bc-metric"><div class="bc-metric-val" id="bcDcl1">—</div><div class="bc-metric-lbl">DOM Ready</div></div>
+        <div class="bc-metric"><div class="bc-metric-val" id="bcLoad1">—</div><div class="bc-metric-lbl">Full Load</div></div>
+      </div>
+      <button class="icon-btn bc-run" id="bcBtn1" onclick="bcRun(1)">▶ Run Check</button>
+      <div class="bc-ts" id="bcTs1"></div>
+    </div>
   </div>
 </div>
 
@@ -1902,6 +1949,54 @@ async function gpRunPings(){
   btn.disabled=false; btn.textContent='↻ Run Again';
 }
 gpUpdateCardDisplays();
+
+// ── Browser Check ─────────────────────────────────────────────
+const BC_URLS = [
+  'https://secure.qgiv.com/for/businessmasteryaug2026/',
+  'https://givebutter.com/marici-shine',
+];
+
+function bcFmt(ms) {
+  if (ms == null) return '—';
+  return ms >= 1000 ? (ms/1000).toFixed(1)+'s' : ms+'ms';
+}
+
+function bcColor(ms, thresholds) {
+  if (ms == null) return 'var(--muted)';
+  if (ms < thresholds[0]) return 'var(--up)';
+  if (ms < thresholds[1]) return 'var(--warn)';
+  return 'var(--down)';
+}
+
+async function bcRun(idx) {
+  const btn = document.getElementById('bcBtn'+idx);
+  btn.disabled = true; btn.textContent = '⏳ Running… (~20s)';
+  document.getElementById('bcTtfb'+idx).textContent = '…';
+  document.getElementById('bcDcl'+idx).textContent  = '…';
+  document.getElementById('bcLoad'+idx).textContent  = '…';
+  document.getElementById('bcTs'+idx).textContent   = '';
+
+  try {
+    const workerBase = localStorage.getItem(WORKER_KEY) || 'https://polished-glitter-de95.srikanth-23f.workers.dev/';
+    const base = workerBase.replace(/\/$/, '');
+    const res  = await fetch(base + '/browser-check?url=' + encodeURIComponent(BC_URLS[idx]));
+    const d    = await res.json();
+
+    if (d.error) throw new Error(d.error);
+
+    document.getElementById('bcTtfb'+idx).textContent = bcFmt(d.ttfb);
+    document.getElementById('bcTtfb'+idx).style.color  = bcColor(d.ttfb,  [500, 1500]);
+    document.getElementById('bcDcl'+idx).textContent  = bcFmt(d.domContentLoaded);
+    document.getElementById('bcDcl'+idx).style.color   = bcColor(d.domContentLoaded, [2000, 5000]);
+    document.getElementById('bcLoad'+idx).textContent  = bcFmt(d.loadTime);
+    document.getElementById('bcLoad'+idx).style.color  = bcColor(d.loadTime, [3000, 8000]);
+    document.getElementById('bcTs'+idx).textContent   = 'Last check: ' + new Date(d.ts).toLocaleTimeString();
+  } catch(e) {
+    document.getElementById('bcTtfb'+idx).textContent = 'ERR';
+    document.getElementById('bcTs'+idx).textContent   = e.message;
+  }
+  btn.disabled = false; btn.textContent = '↻ Run Again';
+}
 </script>
 </body>
 </html>

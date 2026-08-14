@@ -21,7 +21,6 @@
   --btn-text:   #080d18;
   --purple:     #a78bfa;
 }
-/* ── Light — system preference ── */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     --bg:         #f0f4f9;
@@ -39,7 +38,6 @@
     --purple:     #6d4fc2;
   }
 }
-/* ── Light — explicit toggle ── */
 :root[data-theme="light"] {
   --bg:         #f0f4f9;
   --surface:    #ffffff;
@@ -55,7 +53,6 @@
   --btn-text:   #ffffff;
   --purple:     #6d4fc2;
 }
-/* ── Dark — explicit toggle ── */
 :root[data-theme="dark"] {
   --bg:         #080d18;
   --surface:    #0f1624;
@@ -71,6 +68,7 @@
   --btn-text:   #080d18;
   --purple:     #a78bfa;
 }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   background: var(--bg); color: var(--text);
@@ -97,6 +95,7 @@ body {
   border-radius: 5px; padding: 0.28rem 0.65rem; font-size: 0.72rem; cursor: pointer;
 }
 .icon-btn:hover { border-color: var(--muted); color: var(--text); }
+.icon-btn.active { border-color: var(--accent); color: var(--accent); }
 .status-line { font-size: 0.65rem; color: var(--muted); }
 
 /* ── TOKEN ROW ── */
@@ -118,12 +117,67 @@ body {
 }
 .token-set:hover { border-color: var(--accent); }
 
+/* ── SETTINGS PANEL ── */
+.settings-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.75rem;
+  display: none;
+}
+.settings-section { margin-bottom: 0.75rem; }
+.settings-section:last-child { margin-bottom: 0; }
+.settings-title {
+  font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--muted); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+}
+.settings-title span { flex: 1; }
+.loc-count { font-size: 0.58rem; color: var(--accent); }
+
+.target-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+@media (max-width: 600px) { .target-grid { grid-template-columns: 1fr; } }
+
+.target-row { display: flex; flex-direction: column; gap: 0.25rem; }
+.target-row-label { font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.target-input-group { display: flex; gap: 0.25rem; }
+.setting-input {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+  color: var(--text); font-size: 0.72rem; padding: 0.22rem 0.45rem;
+  outline: none; font-family: monospace; min-width: 0;
+}
+.setting-input:focus { border-color: var(--accent); }
+.host-input { flex: 2; }
+.path-input { flex: 1; }
+
+.region-group { margin-bottom: 0.45rem; }
+.region-label {
+  font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); margin-bottom: 0.25rem;
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.2rem; }
+.loc-chip {
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  background: var(--surface-alt); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0.12rem 0.35rem; font-size: 0.63rem;
+  cursor: pointer; user-select: none; transition: border-color .1s, background .1s, color .1s;
+  white-space: nowrap;
+}
+.loc-chip.selected {
+  background: rgba(0,200,240,0.12); border-color: var(--accent); color: var(--accent);
+}
+:root[data-theme="light"] .loc-chip.selected { background: rgba(0,112,160,0.1); }
+.loc-chip:hover:not(.selected) { border-color: var(--muted); color: var(--text); }
+
+.settings-actions { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.6rem; }
+.save-btn {
+  background: var(--accent); color: var(--btn-text); border: none;
+  border-radius: 5px; padding: 0.28rem 0.8rem; font-size: 0.7rem; font-weight: 700; cursor: pointer;
+}
+.sel-all { font-size: 0.63rem; color: var(--muted); cursor: pointer; padding: 0.2rem 0.4rem; }
+.sel-all:hover { color: var(--text); }
+
 /* ── GRID ── */
 .grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0.75rem; margin-top: 0.5rem;
 }
 @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
 
@@ -133,9 +187,9 @@ body {
 }
 .card-title {
   font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.6rem;
+  letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.25rem;
 }
-.card-url { font-family: monospace; font-size: 0.72rem; color: var(--accent); }
+.card-url { font-family: monospace; font-size: 0.72rem; color: var(--accent); margin-bottom: 0.25rem; }
 
 /* ── TABLE ── */
 table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
@@ -177,10 +231,11 @@ tr:last-child td { border-bottom: none; }
 
 <div class="topbar">
   <span class="brand">🌍 Global Latency</span>
-  <span class="subtitle">marici.org/shine &amp; Qgiv · 15 locations worldwide</span>
+  <span class="subtitle" id="locBadge">— locations worldwide</span>
   <span class="spacer"></span>
   <span class="status-line" id="statusLine">Enter token and click Run.</span>
   <button class="run-btn" id="runBtn" onclick="runPings()">▶ Run Global Ping</button>
+  <button class="icon-btn" id="cfgBtn" onclick="toggleSettings()">⚙ Configure</button>
   <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark">☀️</button>
   <a href="status-monitor.html" class="icon-btn" style="text-decoration:none">← Monitor</a>
 </div>
@@ -192,21 +247,59 @@ tr:last-child td { border-bottom: none; }
   <button class="token-set" onclick="clearToken()" style="color:var(--down)">✕</button>
 </div>
 
+<!-- Settings panel -->
+<div class="settings-panel" id="settingsPanel">
+
+  <div class="settings-section">
+    <div class="settings-title"><span>Target URLs</span></div>
+    <div class="target-grid">
+      <div class="target-row">
+        <div class="target-row-label">Target 1</div>
+        <div class="target-input-group">
+          <input class="setting-input host-input" id="t1host" placeholder="e.g. marici.org" />
+          <input class="setting-input path-input" id="t1path" placeholder="/shine" />
+        </div>
+      </div>
+      <div class="target-row">
+        <div class="target-row-label">Target 2</div>
+        <div class="target-input-group">
+          <input class="setting-input host-input" id="t2host" placeholder="e.g. example.com" />
+          <input class="setting-input path-input" id="t2path" placeholder="/" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-title">
+      <span>Locations</span>
+      <span class="loc-count" id="pendingCount">0 selected</span>
+    </div>
+    <div id="locationChips"></div>
+    <div class="settings-actions">
+      <button class="save-btn" onclick="saveSettings()">✓ Save & Close</button>
+      <span class="sel-all" onclick="selectAllLocs()">Select all</span>
+      <span class="sel-all" onclick="clearAllLocs()">Clear all</span>
+    </div>
+  </div>
+
+</div>
+
 <div class="grid">
   <div class="card">
     <div class="card-title">Target 1</div>
-    <div class="card-url">marici.org/shine</div>
+    <div class="card-url" id="card1url">—</div>
     <table>
       <thead><tr><th>Location</th><th>Total</th><th>Status</th></tr></thead>
-      <tbody id="mariciBody"></tbody>
+      <tbody id="body1"></tbody>
     </table>
   </div>
   <div class="card">
     <div class="card-title">Target 2</div>
-    <div class="card-url">secure.qgiv.com</div>
+    <div class="card-url" id="card2url">—</div>
     <table>
       <thead><tr><th>Location</th><th>Total</th><th>Status</th></tr></thead>
-      <tbody id="qgivBody"></tbody>
+      <tbody id="body2"></tbody>
     </table>
   </div>
 </div>
@@ -219,26 +312,71 @@ tr:last-child td { border-bottom: none; }
 </div>
 
 <script>
-const API = 'https://api.globalping.io/v1/measurements';
+const API       = 'https://api.globalping.io/v1/measurements';
 const TOKEN_KEY = 'gp_token';
+const LOCS_KEY  = 'gp_locations';
+const TGTS_KEY  = 'gp_targets';
+const THEME_KEY = 'gp_theme';
 
-const LOCATIONS = [
-  { magic: 'US', flag: '🇺🇸', name: 'United States',    limit: 3 },
-  { magic: 'CA', flag: '🇨🇦', name: 'Canada',            limit: 1 },
-  { magic: 'BR', flag: '🇧🇷', name: 'Brazil',            limit: 1 },
-  { magic: 'GB', flag: '🇬🇧', name: 'United Kingdom',    limit: 1 },
-  { magic: 'DE', flag: '🇩🇪', name: 'Germany',           limit: 1 },
-  { magic: 'FR', flag: '🇫🇷', name: 'France',            limit: 1 },
-  { magic: 'NL', flag: '🇳🇱', name: 'Netherlands',       limit: 1 },
-  { magic: 'IN', flag: '🇮🇳', name: 'India',             limit: 1 },
-  { magic: 'AE', flag: '🇦🇪', name: 'UAE',               limit: 1 },
-  { magic: 'SG', flag: '🇸🇬', name: 'Singapore',         limit: 1 },
-  { magic: 'JP', flag: '🇯🇵', name: 'Japan',             limit: 1 },
-  { magic: 'KR', flag: '🇰🇷', name: 'South Korea',       limit: 1 },
-  { magic: 'AU', flag: '🇦🇺', name: 'Australia',         limit: 1 },
-  { magic: 'ZA', flag: '🇿🇦', name: 'South Africa',      limit: 1 },
+// ── All available locations ──
+const ALL_LOCATIONS = [
+  { magic:'US', flag:'🇺🇸', name:'United States',  region:'Americas',     limit:2 },
+  { magic:'CA', flag:'🇨🇦', name:'Canada',          region:'Americas',     limit:1 },
+  { magic:'BR', flag:'🇧🇷', name:'Brazil',          region:'Americas',     limit:1 },
+  { magic:'MX', flag:'🇲🇽', name:'Mexico',          region:'Americas',     limit:1 },
+  { magic:'AR', flag:'🇦🇷', name:'Argentina',       region:'Americas',     limit:1 },
+  { magic:'GB', flag:'🇬🇧', name:'United Kingdom',  region:'Europe',       limit:1 },
+  { magic:'DE', flag:'🇩🇪', name:'Germany',         region:'Europe',       limit:1 },
+  { magic:'FR', flag:'🇫🇷', name:'France',          region:'Europe',       limit:1 },
+  { magic:'NL', flag:'🇳🇱', name:'Netherlands',     region:'Europe',       limit:1 },
+  { magic:'SE', flag:'🇸🇪', name:'Sweden',          region:'Europe',       limit:1 },
+  { magic:'PL', flag:'🇵🇱', name:'Poland',          region:'Europe',       limit:1 },
+  { magic:'IT', flag:'🇮🇹', name:'Italy',           region:'Europe',       limit:1 },
+  { magic:'ES', flag:'🇪🇸', name:'Spain',           region:'Europe',       limit:1 },
+  { magic:'FI', flag:'🇫🇮', name:'Finland',         region:'Europe',       limit:1 },
+  { magic:'CH', flag:'🇨🇭', name:'Switzerland',     region:'Europe',       limit:1 },
+  { magic:'AT', flag:'🇦🇹', name:'Austria',         region:'Europe',       limit:1 },
+  { magic:'SG', flag:'🇸🇬', name:'Singapore',       region:'Asia-Pacific', limit:1 },
+  { magic:'JP', flag:'🇯🇵', name:'Japan',           region:'Asia-Pacific', limit:1 },
+  { magic:'AU', flag:'🇦🇺', name:'Australia',       region:'Asia-Pacific', limit:1 },
+  { magic:'IN', flag:'🇮🇳', name:'India',           region:'Asia-Pacific', limit:1 },
+  { magic:'KR', flag:'🇰🇷', name:'South Korea',     region:'Asia-Pacific', limit:1 },
+  { magic:'HK', flag:'🇭🇰', name:'Hong Kong',       region:'Asia-Pacific', limit:1 },
+  { magic:'TW', flag:'🇹🇼', name:'Taiwan',          region:'Asia-Pacific', limit:1 },
+  { magic:'MY', flag:'🇲🇾', name:'Malaysia',        region:'Asia-Pacific', limit:1 },
+  { magic:'TH', flag:'🇹🇭', name:'Thailand',        region:'Asia-Pacific', limit:1 },
+  { magic:'ID', flag:'🇮🇩', name:'Indonesia',       region:'Asia-Pacific', limit:1 },
+  { magic:'AE', flag:'🇦🇪', name:'UAE',             region:'ME & Africa',  limit:1 },
+  { magic:'ZA', flag:'🇿🇦', name:'South Africa',    region:'ME & Africa',  limit:1 },
+  { magic:'NG', flag:'🇳🇬', name:'Nigeria',         region:'ME & Africa',  limit:1 },
+  { magic:'TR', flag:'🇹🇷', name:'Turkey',          region:'ME & Africa',  limit:1 },
 ];
 
+const DEFAULT_LOCS = ['US','CA','BR','GB','DE','FR','NL','IN','AE','SG','JP','KR','AU','ZA'];
+const DEFAULT_TGTS = [
+  { host: 'marici.org',      path: '/shine' },
+  { host: 'secure.qgiv.com', path: '/for/businessmasteryaug2026/' },
+];
+
+// ── Persistence helpers ──
+function getSelectedMagics() {
+  try { const v = localStorage.getItem(LOCS_KEY); return v ? JSON.parse(v) : DEFAULT_LOCS; }
+  catch { return DEFAULT_LOCS; }
+}
+function saveSelectedMagics(arr) { localStorage.setItem(LOCS_KEY, JSON.stringify(arr)); }
+
+function getTargets() {
+  try { const v = localStorage.getItem(TGTS_KEY); return v ? JSON.parse(v) : DEFAULT_TGTS; }
+  catch { return DEFAULT_TGTS; }
+}
+function saveTargetsLS(arr) { localStorage.setItem(TGTS_KEY, JSON.stringify(arr)); }
+
+function getActiveLocations() {
+  const sel = new Set(getSelectedMagics());
+  return ALL_LOCATIONS.filter(l => sel.has(l.magic));
+}
+
+// ── Token ──
 function sanitizeToken(t) { return t.replace(/[^\x20-\x7E]/g, '').trim(); }
 function getToken() { return sanitizeToken(localStorage.getItem(TOKEN_KEY) || ''); }
 function saveToken() {
@@ -255,28 +393,106 @@ function clearToken() {
 }
 function setStatus(msg) { document.getElementById('statusLine').textContent = msg; }
 
+// ── Settings panel ──
+let pendingLocs = new Set();
+let settingsOpen = false;
+
+function toggleSettings() {
+  if (settingsOpen) closeSettings();
+  else openSettings();
+}
+
+function openSettings() {
+  settingsOpen = true;
+  pendingLocs = new Set(getSelectedMagics());
+
+  const tgts = getTargets();
+  document.getElementById('t1host').value = tgts[0]?.host || '';
+  document.getElementById('t1path').value = tgts[0]?.path || '/';
+  document.getElementById('t2host').value = tgts[1]?.host || '';
+  document.getElementById('t2path').value = tgts[1]?.path || '/';
+
+  renderChips();
+  document.getElementById('settingsPanel').style.display = 'block';
+  document.getElementById('cfgBtn').classList.add('active');
+  document.getElementById('cfgBtn').textContent = '✕ Close';
+}
+
+function closeSettings() {
+  settingsOpen = false;
+  document.getElementById('settingsPanel').style.display = 'none';
+  document.getElementById('cfgBtn').classList.remove('active');
+  document.getElementById('cfgBtn').textContent = '⚙ Configure';
+}
+
+function toggleLoc(magic) {
+  if (pendingLocs.has(magic)) pendingLocs.delete(magic);
+  else pendingLocs.add(magic);
+  renderChips();
+}
+function selectAllLocs() { ALL_LOCATIONS.forEach(l => pendingLocs.add(l.magic)); renderChips(); }
+function clearAllLocs()  { pendingLocs.clear(); renderChips(); }
+
+function renderChips() {
+  const regions = ['Americas', 'Europe', 'Asia-Pacific', 'ME & Africa'];
+  document.getElementById('locationChips').innerHTML = regions.map(region => {
+    const locs = ALL_LOCATIONS.filter(l => l.region === region);
+    return `<div class="region-group">
+      <div class="region-label">${region}</div>
+      <div class="chip-row">${locs.map(l => {
+        const sel = pendingLocs.has(l.magic);
+        return `<span class="loc-chip${sel ? ' selected' : ''}" onclick="toggleLoc('${l.magic}')" title="${l.name}">
+          ${l.flag} ${l.magic}
+        </span>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('pendingCount').textContent = `${pendingLocs.size} selected`;
+}
+
+function saveSettings() {
+  const strip = s => s.trim().replace(/^https?:\/\//i, '').replace(/^\/\//, '');
+  const tgts = [
+    { host: strip(document.getElementById('t1host').value), path: document.getElementById('t1path').value.trim() || '/' },
+    { host: strip(document.getElementById('t2host').value), path: document.getElementById('t2path').value.trim() || '/' },
+  ];
+  saveTargetsLS(tgts);
+  saveSelectedMagics([...pendingLocs]);
+  updateCardDisplays();
+  closeSettings();
+  setStatus(`Saved — ${pendingLocs.size} locations, 2 targets.`);
+}
+
+function updateCardDisplays() {
+  const tgts  = getTargets();
+  const count = getActiveLocations().length;
+  document.getElementById('card1url').textContent = tgts[0] ? `${tgts[0].host}${tgts[0].path}` : '—';
+  document.getElementById('card2url').textContent = tgts[1] ? `${tgts[1].host}${tgts[1].path}` : '—';
+  document.getElementById('locBadge').textContent = `${count} locations worldwide`;
+}
+
+// ── Latency / status helpers ──
 function latClass(ms) {
-  if (ms === null || ms === undefined) return 'pending';
-  if (ms < 100) return 'lat good';
-  if (ms < 300) return 'lat warn';
-  if (ms < 600) return 'lat bad';
+  if (ms == null) return 'lat pending';
+  if (ms < 100)  return 'lat good';
+  if (ms < 300)  return 'lat warn';
+  if (ms < 600)  return 'lat bad';
   return 'lat slow';
+}
+function statusClass(code) {
+  if (!code) return 'http-status';
+  return `http-status s${Math.floor(code / 100)}`;
 }
 
 const COUNTRY_FLAGS = {
   US:'🇺🇸',CA:'🇨🇦',GB:'🇬🇧',DE:'🇩🇪',FR:'🇫🇷',NL:'🇳🇱',
   SG:'🇸🇬',JP:'🇯🇵',AU:'🇦🇺',IN:'🇮🇳',BR:'🇧🇷',ZA:'🇿🇦',
   KR:'🇰🇷',AE:'🇦🇪',SE:'🇸🇪',PL:'🇵🇱',IT:'🇮🇹',ES:'🇪🇸',
-  FI:'🇫🇮',CH:'🇨🇭',AT:'🇦🇹',MX:'🇲🇽',AR:'🇦🇷',CL:'🇨🇱',
-  HK:'🇭🇰',TW:'🇹🇼',MY:'🇲🇾',TH:'🇹🇭',ID:'🇮🇩',PH:'🇵🇭',
+  FI:'🇫🇮',CH:'🇨🇭',AT:'🇦🇹',MX:'🇲🇽',AR:'🇦🇷',HK:'🇭🇰',
+  TW:'🇹🇼',MY:'🇲🇾',TH:'🇹🇭',ID:'🇮🇩',NG:'🇳🇬',TR:'🇹🇷',
 };
 
-function statusClass(code) {
-  if (!code) return 'http-status';
-  const s = Math.floor(code / 100);
-  return `http-status s${s}`;
-}
-
+// ── Render table ──
 function renderProbes(bodyId, probes) {
   const tbody = document.getElementById(bodyId);
   if (!probes || probes.length === 0) {
@@ -285,12 +501,11 @@ function renderProbes(bodyId, probes) {
   }
   const sorted = [...probes].sort((a, b) => (a.total ?? 9999) - (b.total ?? 9999));
   tbody.innerHTML = sorted.map(p => {
-    const flag = COUNTRY_FLAGS[p.country] || '🌐';
-    const latStr = p.total !== null ? `${p.total}ms` : '—';
-    const cls = latClass(p.total);
-    const statusStr = p.statusCode ? `${p.statusCode}` : '—';
-    const sCls = statusClass(p.statusCode);
-    const tip = p.resolvedAddress ? ` title="${p.resolvedAddress}"` : '';
+    const flag    = COUNTRY_FLAGS[p.country] || '🌐';
+    const latStr  = p.total != null ? `${p.total}ms` : '—';
+    const cls     = latClass(p.total);
+    const sCls    = statusClass(p.statusCode);
+    const tip     = p.resolvedAddress ? ` title="${p.resolvedAddress}"` : '';
     return `<tr>
       <td>
         <div class="loc-cell">
@@ -302,22 +517,21 @@ function renderProbes(bodyId, probes) {
         </div>
       </td>
       <td><span class="${cls}"${tip}>${latStr}</span></td>
-      <td><span class="${sCls}">${statusStr}</span></td>
+      <td><span class="${sCls}">${p.statusCode || '—'}</span></td>
     </tr>`;
   }).join('');
 }
 
-async function createMeasurement(host, path, token) {
+// ── API ──
+async function createMeasurement(host, path, locs, token) {
   const resp = await fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify({
       type: 'http',
       target: host,
-      locations: LOCATIONS.map(l => ({ magic: l.magic, limit: l.limit })),
-      measurementOptions: {
-        request: { method: 'GET', path },
-      },
+      locations: locs.map(l => ({ magic: l.magic, limit: l.limit })),
+      measurementOptions: { request: { method: 'GET', path } },
     }),
   });
   if (!resp.ok) {
@@ -330,9 +544,7 @@ async function createMeasurement(host, path, token) {
 async function pollMeasurement(id, token, bodyId) {
   for (let i = 0; i < 40; i++) {
     await new Promise(r => setTimeout(r, 1000));
-    const resp = await fetch(`${API}/${id}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const resp = await fetch(`${API}/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
     const data = await resp.json();
     const probes = (data.results || []).map(r => ({
       city:            r.probe?.city    || '',
@@ -352,25 +564,29 @@ async function runPings() {
   const token = getToken();
   if (!token) { setStatus('⚠ Set your Globalping token first.'); return; }
 
+  const tgts = getTargets();
+  const locs = getActiveLocations();
+  if (locs.length === 0) { setStatus('⚠ Select at least one location in Configure.'); return; }
+
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
   btn.textContent = '⏳ Running…';
 
-  renderProbes('mariciBody', []);
-  renderProbes('qgivBody', []);
-  setStatus('Firing HTTP checks from 15 locations… (~15s)');
+  renderProbes('body1', []);
+  renderProbes('body2', []);
+  setStatus(`Firing HTTP checks from ${locs.length} locations… (~15s)`);
 
   try {
-    const [mariciId, qgivId] = await Promise.all([
-      createMeasurement('marici.org', '/shine', token),
-      createMeasurement('secure.qgiv.com', '/for/businessmasteryaug2026/', token),
+    const [id1, id2] = await Promise.all([
+      createMeasurement(tgts[0].host, tgts[0].path, locs, token),
+      createMeasurement(tgts[1].host, tgts[1].path, locs, token),
     ]);
     setStatus('Polling results…');
     await Promise.all([
-      pollMeasurement(mariciId, token, 'mariciBody'),
-      pollMeasurement(qgivId,   token, 'qgivBody'),
+      pollMeasurement(id1, token, 'body1'),
+      pollMeasurement(id2, token, 'body2'),
     ]);
-    setStatus(`Last run: ${new Date().toLocaleTimeString()} — results from ${LOCATIONS.length} regions`);
+    setStatus(`Last run: ${new Date().toLocaleTimeString()} — ${locs.length} regions`);
   } catch (e) {
     setStatus(`Error: ${e.message}`);
   }
@@ -380,7 +596,6 @@ async function runPings() {
 }
 
 // ── Theme toggle ──
-const THEME_KEY = 'gp_theme';
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   document.getElementById('themeBtn').textContent = theme === 'light' ? '🌙' : '☀️';
@@ -392,9 +607,9 @@ function toggleTheme() {
   applyTheme(next);
 }
 
-// Init
-const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
-applyTheme(savedTheme);
+// ── Init ──
+applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+updateCardDisplays();
 
 const saved = getToken();
 if (saved) {

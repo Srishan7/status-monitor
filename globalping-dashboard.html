@@ -239,9 +239,10 @@ const LOCATIONS = [
   { magic: 'ZA', flag: '🇿🇦', name: 'South Africa',      limit: 1 },
 ];
 
-function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+function sanitizeToken(t) { return t.replace(/[^\x20-\x7E]/g, '').trim(); }
+function getToken() { return sanitizeToken(localStorage.getItem(TOKEN_KEY) || ''); }
 function saveToken() {
-  const v = document.getElementById('tokenInput').value.trim();
+  const v = sanitizeToken(document.getElementById('tokenInput').value);
   if (!v) return;
   localStorage.setItem(TOKEN_KEY, v);
   document.getElementById('tokenInput').value = '••••••••••••••••';

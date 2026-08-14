@@ -176,16 +176,25 @@ export default {
       }
     }
 
-    // ── 6. HTMLRewriter — inject iframe timer ──
+    // ── 6. HTMLRewriter — inject iframe timer + worker URL ──
     const response = await fetch(request);
     const contentType = response.headers.get('content-type') || '';
     if (!contentType.includes('text/html')) return response;
 
+    const workerOrigin = new URL(request.url).origin;
     return new HTMLRewriter()
+      .on('head', new WorkerUrlInjector(workerOrigin))
       .on('iframe', new IframeTimerHandler())
       .transform(response);
   },
 };
+
+class WorkerUrlInjector {
+  constructor(origin) { this.origin = origin; }
+  element(element) {
+    element.prepend(`<script>window.WORKER_URL='${this.origin}/';</script>`, { html: true });
+  }
+}
 
 class IframeTimerHandler {
   element(element) {

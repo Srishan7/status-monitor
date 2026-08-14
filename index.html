@@ -420,6 +420,11 @@ html.light .gp-loc-chip.selected { background:rgba(0,112,160,0.1); }
 .bc-metric-lbl { font-size:0.55rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin-top:0.1rem; }
 .bc-run { font-size:0.7rem; padding:0.3rem 0.7rem; }
 .bc-ts { font-size:0.6rem; color:var(--muted); margin-top:0.4rem; }
+.bc-log { font-family:monospace; font-size:0.68rem; max-height:140px; overflow-y:auto; margin-top:0.3rem; }
+.bc-log-row { display:flex; gap:0.5rem; padding:0.2rem 0; border-bottom:1px solid var(--border); align-items:center; }
+.bc-log-row:last-child { border-bottom:none; }
+.bc-log-time { color:var(--muted); flex-shrink:0; }
+.bc-log-load { font-weight:700; font-variant-numeric:tabular-nums; }
 .gp-loc-cell { display:flex; align-items:center; gap:0.4rem; }
 .gp-loc-name { font-size:0.72rem; color:var(--text); }
 .gp-loc-city { font-size:0.62rem; color:var(--muted); }
@@ -537,7 +542,7 @@ html.light .gp-loc-chip.selected { background:rgba(0,112,160,0.1); }
 </div>
 
 <!-- ── IFRAME METRICS CARD ── -->
-<div class="chart-card" id="iframeMetricsCard" style="display:none">
+<div class="chart-card" id="iframeMetricsCard">
   <div class="chart-hdr">
     <div>
       <span class="chart-title">📋 Donate Form · Real Load Times</span>
@@ -709,6 +714,8 @@ html.light .gp-loc-chip.selected { background:rgba(0,112,160,0.1); }
       </div>
       <button class="icon-btn bc-run" id="bcBtn0" onclick="bcRun(0)">▶ Run Check</button>
       <div class="bc-ts" id="bcTs0"></div>
+      <div class="sub-label" style="margin-top:0.6rem">Recent checks</div>
+      <div class="bc-log" id="bcLog0">—</div>
     </div>
     <div class="bc-card">
       <div class="bc-label">Givebutter — Shine Campaign</div>
@@ -720,6 +727,8 @@ html.light .gp-loc-chip.selected { background:rgba(0,112,160,0.1); }
       </div>
       <button class="icon-btn bc-run" id="bcBtn1" onclick="bcRun(1)">▶ Run Check</button>
       <div class="bc-ts" id="bcTs1"></div>
+      <div class="sub-label" style="margin-top:0.6rem">Recent checks</div>
+      <div class="bc-log" id="bcLog1">—</div>
     </div>
   </div>
 </div>
@@ -1951,6 +1960,29 @@ async function gpRunPings(){
 gpUpdateCardDisplays();
 
 // ── Browser Check ─────────────────────────────────────────────
+async function bcFetchLog(idx) {
+  try {
+    const base = (localStorage.getItem(WORKER_KEY) || 'https://polished-glitter-de95.srikanth-23f.workers.dev/').replace(/\/$/,'');
+    const res  = await fetch(base + '/browser-metrics?url=' + encodeURIComponent(BC_URLS[idx]));
+    const d    = await res.json();
+    const el   = document.getElementById('bcLog'+idx);
+    if (!d.entries || !d.entries.length) { el.textContent = 'No checks yet'; return; }
+    el.innerHTML = d.entries.slice(0,10).map(e => {
+      const t   = new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      const col = bcColor(e.load_time, [3000,8000]);
+      return `<div class="bc-log-row">
+        <span class="bc-log-time">${t}</span>
+        <span class="bc-log-load" style="color:${col}">${bcFmt(e.load_time)}</span>
+        <span style="color:var(--muted)">TTFB ${bcFmt(e.ttfb)} · DOM ${bcFmt(e.dom_content_loaded)}</span>
+      </div>`;
+    }).join('');
+  } catch {}
+}
+
+function bcRefreshLogs() { bcFetchLog(0); bcFetchLog(1); }
+bcRefreshLogs();
+setInterval(bcRefreshLogs, 30000);
+
 const BC_URLS = [
   'https://secure.qgiv.com/for/businessmasteryaug2026/',
   'https://givebutter.com/marici-shine',

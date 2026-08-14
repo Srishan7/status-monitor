@@ -1817,10 +1817,13 @@ function gpToggleLoc(magic){if(gpPendingLocs.has(magic))gpPendingLocs.delete(mag
 function gpSelectAllLocs(){GP_ALL_LOCATIONS.forEach(l=>gpPendingLocs.add(l.magic));gpRenderChips();}
 function gpClearAllLocs(){gpPendingLocs.clear();gpRenderChips();}
 function gpRenderChips(){
-  const regions=['Americas','Europe','Asia-Pacific','ME & Africa'];
-  document.getElementById('gpLocationChips').innerHTML=regions.map(region=>{
-    const locs=GP_ALL_LOCATIONS.filter(l=>l.region===region);
-    return `<div class="gp-region-group"><div class="gp-region-label">${region}</div><div class="gp-chip-row">${locs.map(l=>{
+  const groups=[
+    { label:'United States', locs: GP_ALL_LOCATIONS.filter(l=>l.magic==='US') },
+    { label:'Europe',        locs: GP_ALL_LOCATIONS.filter(l=>l.region==='Europe') },
+    { label:'Rest of World', locs: GP_ALL_LOCATIONS.filter(l=>l.magic!=='US' && l.region!=='Europe') },
+  ];
+  document.getElementById('gpLocationChips').innerHTML=groups.map(g=>{
+    return `<div class="gp-region-group"><div class="gp-region-label">${g.label}</div><div class="gp-chip-row">${g.locs.map(l=>{
       const sel=gpPendingLocs.has(l.magic);
       return `<span class="gp-loc-chip${sel?' selected':''}" onclick="gpToggleLoc('${l.magic}')" title="${l.name}">${l.flag} ${l.magic}</span>`;
     }).join('')}</div></div>`;

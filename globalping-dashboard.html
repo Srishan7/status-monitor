@@ -307,16 +307,16 @@ function renderProbes(bodyId, probes) {
   }).join('');
 }
 
-async function createMeasurement(url, token) {
+async function createMeasurement(host, path, token) {
   const resp = await fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify({
       type: 'http',
-      target: url,
+      target: host,
       locations: LOCATIONS.map(l => ({ magic: l.magic, limit: l.limit })),
       measurementOptions: {
-        request: { method: 'GET' },
+        request: { method: 'GET', path },
       },
     }),
   });
@@ -339,7 +339,7 @@ async function pollMeasurement(id, token, bodyId) {
       country:         r.probe?.country || '',
       network:         r.probe?.network || '',
       total:           r.result?.timings?.total != null ? Math.round(r.result.timings.total) : null,
-      statusCode:      r.result?.status  ?? null,
+      statusCode:      r.result?.statusCode ?? null,
       resolvedAddress: r.result?.resolvedAddress || '',
     }));
     renderProbes(bodyId, probes);
@@ -362,8 +362,8 @@ async function runPings() {
 
   try {
     const [mariciId, qgivId] = await Promise.all([
-      createMeasurement('https://marici.org/shine', token),
-      createMeasurement('https://secure.qgiv.com/for/businessmasteryaug2026/', token),
+      createMeasurement('marici.org', '/shine', token),
+      createMeasurement('secure.qgiv.com', '/for/businessmasteryaug2026/', token),
     ]);
     setStatus('Polling results…');
     await Promise.all([

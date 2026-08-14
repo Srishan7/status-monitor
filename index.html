@@ -703,7 +703,7 @@ let logFilterSelected = false;
 let timerId           = null;
 let sessionStart      = new Date();
 let priorPingsLoaded  = 0;
-let workerUrl         = localStorage.getItem(WORKER_KEY) || window.WORKER_URL || '';
+let workerUrl         = localStorage.getItem(WORKER_KEY) || 'https://polished-glitter-de95.srikanth-23f.workers.dev/';
 
 function initState(id) {
   state[id] = {

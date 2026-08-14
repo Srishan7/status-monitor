@@ -975,40 +975,6 @@ function refreshAllCard() {
     </div>`;
   }).join('');
 
-  // Append iframe load time card if data is available
-  if (iframeLogsCache.length > 0) {
-    const durs   = iframeLogsCache.map(e => e.duration);
-    const avg    = Math.round(durs.reduce((a, b) => a + b, 0) / durs.length);
-    const min    = Math.round(Math.min(...durs));
-    const sorted = [...durs].sort((a, b) => a - b);
-    const p95    = Math.round(sorted[Math.floor(sorted.length * 0.95)]);
-    const color  = avg < 2000 ? 'var(--up)' : avg < 5000 ? 'var(--warn)' : 'var(--down)';
-    el.innerHTML += `<div class="amc" style="--amc-color:#a78bfa;cursor:pointer" onclick="document.getElementById('iframeMetricsCard').scrollIntoView({behavior:'smooth'})">
-      <div class="amc-header">
-        <div class="amc-left">
-          <div class="amc-status-row">
-            <span class="mc-big-dot good"></span>
-            <span class="mc-state good">LIVE</span>
-          </div>
-          <span class="amc-label">Donate Form · Load Time</span>
-        </div>
-        <div class="amc-right">
-          <div class="mc-lat-row">
-            <span class="amc-lat-big" style="color:${color}">${avg}</span>
-            <span class="amc-lat-unit">ms</span>
-          </div>
-          <div class="amc-pings">${iframeLogsCache.length} sessions</div>
-        </div>
-      </div>
-      <div class="amc-metrics">
-        <div class="amc-tile"><div class="amc-tile-lbl">Avg</div><div class="amc-tile-val">${avg}ms</div></div>
-        <div class="amc-tile"><div class="amc-tile-lbl">Fastest</div><div class="amc-tile-val">${min}ms</div></div>
-        <div class="amc-tile"><div class="amc-tile-lbl">P95</div><div class="amc-tile-val">${p95}ms</div></div>
-        <div class="amc-tile"><div class="amc-tile-lbl">Sessions</div><div class="amc-tile-val">${iframeLogsCache.length}</div></div>
-      </div>
-    </div>`;
-  }
-
   monitors.forEach(m => {
     const M = computeMetrics(m.id);
     drawMainChart(m, M, `amc-chart-${m.id}`);
@@ -1380,7 +1346,6 @@ function renderIframeMetrics(d) {
   if (!d || d.count === 0) { card.style.display = 'none'; return; }
   card.style.display = '';
   iframeLogsCache = d.entries || [];
-  refreshAllCard();
 
   document.getElementById('iframeMetaNote').textContent = `${d.count} real donor session${d.count !== 1 ? 's' : ''} recorded`;
 

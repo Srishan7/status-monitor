@@ -1851,7 +1851,8 @@ function gpStatusClass(code){if(!code)return 'gp-http-status';return `gp-http-st
 function gpRenderProbes(bodyId,probes){
   const tbody=document.getElementById(bodyId);
   if(!probes||!probes.length){tbody.innerHTML='<tr><td colspan="3" style="color:var(--muted);font-style:italic;padding:0.5rem">Waiting for results…</td></tr>';return;}
-  const sorted=[...probes].sort((a,b)=>(a.total??9999)-(b.total??9999));
+  const gpGroupOrder=c=>c==='US'?0:(['GB','DE','FR','NL','SE','PL','IT','ES','FI','CH','AT'].includes(c)?1:2);
+  const sorted=[...probes].sort((a,b)=>{const g=gpGroupOrder(a.country)-gpGroupOrder(b.country);return g||((a.total??9999)-(b.total??9999));});
   tbody.innerHTML=sorted.map(p=>{
     const flag=GP_COUNTRY_FLAGS[p.country]||'🌐';
     const tip=p.resolvedAddress?` title="${p.resolvedAddress}"`:'';

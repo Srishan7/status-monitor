@@ -5,16 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Global Latency — Marici</title>
 <style>
+/* ── Dark (default) ── */
 :root {
-  --bg:      #080d18;
-  --surface: #0f1624;
-  --border:  #1c2b42;
-  --text:    #dde4f0;
-  --muted:   #4a6080;
-  --up:      #23d18b;
-  --warn:    #f0a830;
-  --down:    #f05050;
-  --accent:  #00c8f0;
+  --bg:         #080d18;
+  --surface:    #0f1624;
+  --surface-alt:#1c2b42;
+  --border:     #1c2b42;
+  --row-border: rgba(28,43,66,0.5);
+  --text:       #dde4f0;
+  --muted:      #4a6080;
+  --up:         #23d18b;
+  --warn:       #f0a830;
+  --down:       #f05050;
+  --accent:     #00c8f0;
+  --btn-text:   #080d18;
+  --purple:     #a78bfa;
+}
+/* ── Light — system preference ── */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:         #f0f4f9;
+    --surface:    #ffffff;
+    --surface-alt:#e0e8f2;
+    --border:     #c8d8eb;
+    --row-border: rgba(180,200,225,0.45);
+    --text:       #1a2535;
+    --muted:      #6b839e;
+    --up:         #0e8f5c;
+    --warn:       #a07000;
+    --down:       #c42020;
+    --accent:     #0070a0;
+    --btn-text:   #ffffff;
+    --purple:     #6d4fc2;
+  }
+}
+/* ── Light — explicit toggle ── */
+:root[data-theme="light"] {
+  --bg:         #f0f4f9;
+  --surface:    #ffffff;
+  --surface-alt:#e0e8f2;
+  --border:     #c8d8eb;
+  --row-border: rgba(180,200,225,0.45);
+  --text:       #1a2535;
+  --muted:      #6b839e;
+  --up:         #0e8f5c;
+  --warn:       #a07000;
+  --down:       #c42020;
+  --accent:     #0070a0;
+  --btn-text:   #ffffff;
+  --purple:     #6d4fc2;
+}
+/* ── Dark — explicit toggle ── */
+:root[data-theme="dark"] {
+  --bg:         #080d18;
+  --surface:    #0f1624;
+  --surface-alt:#1c2b42;
+  --border:     #1c2b42;
+  --row-border: rgba(28,43,66,0.5);
+  --text:       #dde4f0;
+  --muted:      #4a6080;
+  --up:         #23d18b;
+  --warn:       #f0a830;
+  --down:       #f05050;
+  --accent:     #00c8f0;
+  --btn-text:   #080d18;
+  --purple:     #a78bfa;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -32,7 +87,7 @@ body {
 .subtitle { font-size: 0.68rem; color: var(--muted); margin-left: 0.25rem; }
 .spacer { flex: 1; }
 .run-btn {
-  background: var(--accent); color: #080d18; border: none; border-radius: 6px;
+  background: var(--accent); color: var(--btn-text); border: none; border-radius: 6px;
   padding: 0.35rem 1rem; font-weight: 700; font-size: 0.75rem; cursor: pointer;
   transition: opacity .15s;
 }
@@ -57,7 +112,7 @@ body {
 }
 .token-input::placeholder { color: var(--muted); }
 .token-set {
-  background: #1c2b42; border: 1px solid var(--border); color: var(--text);
+  background: var(--surface-alt); border: 1px solid var(--border); color: var(--text);
   border-radius: 4px; padding: 0.22rem 0.6rem; font-size: 0.65rem;
   cursor: pointer; white-space: nowrap;
 }
@@ -89,7 +144,7 @@ th {
   color: var(--muted); padding: 0.3rem 0.5rem; text-align: left;
   border-bottom: 1px solid var(--border);
 }
-td { padding: 0.28rem 0.5rem; border-bottom: 1px solid rgba(28,43,66,0.5); }
+td { padding: 0.28rem 0.5rem; border-bottom: 1px solid var(--row-border); }
 tr:last-child td { border-bottom: none; }
 
 .loc-cell { display: flex; align-items: center; gap: 0.4rem; }
@@ -101,7 +156,7 @@ tr:last-child td { border-bottom: none; }
 .lat.good { color: var(--up); }
 .lat.warn { color: var(--warn); }
 .lat.bad  { color: var(--down); }
-.lat.slow { color: #a78bfa; }
+.lat.slow { color: var(--purple); }
 .lat.pending { color: var(--muted); font-style: italic; font-weight: 400; font-size: 0.68rem; }
 
 .loss { font-size: 0.65rem; color: var(--muted); }
@@ -124,6 +179,7 @@ tr:last-child td { border-bottom: none; }
   <span class="spacer"></span>
   <span class="status-line" id="statusLine">Enter token and click Run.</span>
   <button class="run-btn" id="runBtn" onclick="runPings()">▶ Run Global Ping</button>
+  <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark">☀️</button>
   <a href="status-monitor.html" class="icon-btn" style="text-decoration:none">← Monitor</a>
 </div>
 
@@ -157,7 +213,7 @@ tr:last-child td { border-bottom: none; }
   <span><span class="dot" style="background:var(--up)"></span> &lt;100ms excellent</span>
   <span><span class="dot" style="background:var(--warn)"></span> 100–300ms good</span>
   <span><span class="dot" style="background:var(--down)"></span> 300–600ms slow</span>
-  <span><span class="dot" style="background:#a78bfa"></span> &gt;600ms very slow</span>
+  <span><span class="dot" style="background:var(--purple)"></span> &gt;600ms very slow</span>
 </div>
 
 <script>
@@ -310,7 +366,23 @@ async function runPings() {
   btn.textContent = '↻ Run Again';
 }
 
+// ── Theme toggle ──
+const THEME_KEY = 'gp_theme';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeBtn').textContent = theme === 'light' ? '🌙' : '☀️';
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+}
+
 // Init
+const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+applyTheme(savedTheme);
+
 const saved = getToken();
 if (saved) {
   document.getElementById('tokenInput').value = '••••••••••••••••';
